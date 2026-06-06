@@ -32,7 +32,20 @@
       "Bash(gh auth *)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git -c user.name=mandrewj -c user.email=m.andrew.johnston@gmail.com commit -q -m ' *)"
+      "Bash(git -c user.name=mandrewj -c user.email=m.andrew.johnston@gmail.com commit -q -m ' *)",
+      "Bash(gh repo *)",
+      "Bash(openssl rand *)",
+      "Bash(echo \"AUTH_SECRET   = $\\(openssl rand -hex 32\\)\")",
+      "Bash(echo \"CRON_SECRET   = $\\(openssl rand -hex 32\\)\")",
+      "Bash(node -e \"console.log\\('@vercel/blob', require\\('@vercel/blob/package.json'\\).version\\)\")",
+      "Bash(vercel --version)",
+      "Bash(vercel whoami *)",
+      "Bash(vercel link *)",
+      "Bash(vercel env *)",
+      "Bash(timeout 20 vercel logs bugbarn.vercel.app)",
+      "Bash(vercel logs *)",
+      "Bash(vercel blob *)",
+      "Bash(git push *)"
     ]
   }
 }

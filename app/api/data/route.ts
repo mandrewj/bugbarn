@@ -12,10 +12,21 @@ async function authed(): Promise<boolean> {
   return verifyToken(token);
 }
 
+// Turn a thrown store error into a clean JSON 500 so the client shows a toast
+// instead of Vercel's full-page crash screen.
+function storeError(e: unknown) {
+  const message = e instanceof Error ? e.message : "Storage error";
+  console.error("[api/data]", message);
+  return NextResponse.json({ error: message }, { status: 500 });
+}
+
 export async function GET() {
   if (!(await authed())) return new NextResponse("unauthorized", { status: 401 });
-  const data = await readStore();
-  return NextResponse.json(data);
+  try {
+    return NextResponse.json(await readStore());
+  } catch (e) {
+    return storeError(e);
+  }
 }
 
 export async function PUT(req: Request) {
@@ -29,8 +40,12 @@ export async function PUT(req: Request) {
   if (!body || !Array.isArray(body.collections)) {
     return new NextResponse("invalid dataset", { status: 400 });
   }
-  await writeStore(body);
-  return NextResponse.json({ ok: true });
+  try {
+    await writeStore(body);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return storeError(e);
+  }
 }
 
 /** Actions that must regenerate data server-side. Body: { action }. */
@@ -42,7 +57,11 @@ export async function POST(req: Request) {
   } catch {
     /* noop */
   }
-  if (action === "reseed") return NextResponse.json(await reseedStore());
-  if (action === "clear") return NextResponse.json(await clearStore());
+  try {
+    if (action === "reseed") return NextResponse.json(await reseedStore());
+    if (action === "clear") return NextResponse.json(await clearStore());
+  } catch (e) {
+    return storeError(e);
+  }
   return new NextResponse("unknown action", { status: 400 });
 }

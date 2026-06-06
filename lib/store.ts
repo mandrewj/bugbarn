@@ -20,8 +20,15 @@ import { seedData } from "./seed";
 const BLOB_PATH = "bugbarn.json";
 const LOCAL_PATH = path.join(process.cwd(), "data", "bugbarn.json");
 const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+// On Vercel the only writable path is /tmp; the bundle dir (process.cwd) is
+// read-only. If we're on Vercel without a Blob token, fail loudly with a clear
+// message instead of an opaque "ENOENT mkdir /var/task/data".
+const onVercelWithoutBlob = !useBlob && !!process.env.VERCEL;
+const MISCONFIG =
+  "Storage is not configured: connect Vercel Blob to this project so BLOB_READ_WRITE_TOKEN is set, then redeploy.";
 
 async function rawRead(): Promise<Dataset | null> {
+  if (onVercelWithoutBlob) throw new Error(MISCONFIG);
   if (useBlob) {
     const { list } = await import("@vercel/blob");
     const { blobs } = await list({ prefix: BLOB_PATH });
@@ -40,6 +47,7 @@ async function rawRead(): Promise<Dataset | null> {
 }
 
 async function rawWrite(data: Dataset): Promise<void> {
+  if (onVercelWithoutBlob) throw new Error(MISCONFIG);
   const body = JSON.stringify(data, null, 2);
   if (useBlob) {
     const { put } = await import("@vercel/blob");
