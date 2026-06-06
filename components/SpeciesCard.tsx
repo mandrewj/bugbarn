@@ -5,7 +5,7 @@ import type { CollectionEntry } from "@/lib/types";
 import { useData } from "@/components/providers/DataProvider";
 import { careStatus, riskOf, exhibitOf } from "@/lib/care";
 import { fmtDate } from "@/lib/format";
-import { RiskBadge, CareStatusChip, Chip } from "@/components/ui/bits";
+import { RiskBadge, CareStatusChip, Chip, PermitBadge } from "@/components/ui/bits";
 
 export function SpeciesCard({ c }: { c: CollectionEntry }) {
   const { sops, carelogs } = useData();
@@ -33,6 +33,7 @@ export function SpeciesCard({ c }: { c: CollectionEntry }) {
         <div className="sci">{c.scientificName}</div>
         {c.enclosureLabel ? <div className="enclabel">{c.enclosureLabel}</div> : null}
         <div className="cardmeta">
+          <PermitBadge status={c.permitStatus} />
           <Chip>colony · {c.colonySize || 0}</Chip>
           <Chip>{c.enclosureType || "—"}</Chip>
           <CareStatusChip st={st} mode="card" />
