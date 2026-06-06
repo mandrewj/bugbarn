@@ -45,7 +45,7 @@ h1,h2,h3,h4{margin:0;}
 .sidebar{background:var(--green);color:#EDE6D6;padding:24px 18px 24px;
   border-right:3px solid var(--green-d);position:sticky;top:0;height:100vh;
   display:flex;flex-direction:column;}
-.brand{display:flex;align-items:center;gap:11px;margin-bottom:26px;padding:0 4px;}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:26px;padding:0 4px;text-decoration:none;color:inherit;}
 .brand .mark{width:40px;height:40px;border-radius:50%;background:var(--amber);
   display:grid;place-items:center;color:var(--green);flex:none;
   box-shadow:inset 0 0 0 3px rgba(45,80,22,.35);}
@@ -63,7 +63,6 @@ h1,h2,h3,h4{margin:0;}
   padding:1px 7px;border-radius:999px;color:#CBD9AE;}
 .sidebar .foot{margin-top:auto;font-family:var(--mono);font-size:10px;color:#8FAE6B;line-height:1.7;
   border-top:1px dashed rgba(175,197,142,.4);padding-top:14px;}
-.sidebar .foot .seedwarn{color:#E8C06A;margin-top:6px;}
 .sidebar .keeperbar{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;
   padding:9px 12px;margin-bottom:12px;border-radius:8px;background:rgba(0,0,0,.16);}
 .sidebar .keeperbar + .foot{margin-top:14px;}
@@ -421,7 +420,7 @@ h1,h2,h3,h4{margin:0;}
   .mtopbar-burger{background:rgba(255,255,255,.08);border:none;color:#F5EAD0;width:40px;height:40px;
     border-radius:9px;display:grid;place-items:center;flex:none;}
   .mtopbar-burger svg{width:22px;height:22px;}
-  .mtopbar-brand{display:flex;align-items:center;gap:9px;min-width:0;}
+  .mtopbar-brand{display:flex;align-items:center;gap:9px;min-width:0;text-decoration:none;}
   .mtopbar-brand .mark{width:30px;height:30px;border-radius:50%;background:var(--amber);display:grid;
     place-items:center;color:var(--green);flex:none;box-shadow:inset 0 0 0 2px rgba(45,80,22,.35);}
   .mtopbar-brand b{font-family:var(--serif);font-weight:900;font-size:16px;color:#F5EAD0;}

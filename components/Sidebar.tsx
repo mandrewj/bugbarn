@@ -32,12 +32,12 @@ export function Sidebar() {
         <button className="mtopbar-burger" aria-label="Open menu" onClick={() => setOpen(true)}>
           <Icon name="menu" />
         </button>
-        <div className="mtopbar-brand">
+        <Link href="/" className="mtopbar-brand">
           <div className="mark">
             <BrandMark />
           </div>
           <b>Bug Barn</b>
-        </div>
+        </Link>
         {lastKeeper ? (
           <button className="mtopbar-keeper" onClick={changeKeeper} title="Change keeper">
             {lastKeeper}
@@ -51,7 +51,7 @@ export function Sidebar() {
         <button className="sidebar-close" aria-label="Close menu" onClick={() => setOpen(false)}>
           <Icon name="x" />
         </button>
-        <div className="brand">
+        <Link href="/" className="brand">
           <div className="mark">
             <BrandMark />
           </div>
@@ -59,7 +59,7 @@ export function Sidebar() {
             <b>Bug Barn</b>
             <small>Living Collections</small>
           </div>
-        </div>
+        </Link>
         <nav className="nav">
           {NAV_ITEMS.map((item) => (
             <Link key={item.key} href={item.href} className={isActive(item.href, pathname) ? "on" : ""}>

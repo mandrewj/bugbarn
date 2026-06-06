@@ -4,7 +4,7 @@
 // they take the data they need so they stay unit-testable.
 // ============================================================
 
-import type { CareLog, CareTask, CollectionEntry, Sop, TaskType, Frequency, Risk } from "./types";
+import type { CareLog, CareTask, CollectionEntry, Sop, Frequency, Risk } from "./types";
 import { daysBetween, dateKey } from "./format";
 
 /** Free-text feeding frequency → day count. */
@@ -34,11 +34,6 @@ export function feedingToFreq(str: string): Frequency {
 /** All logs for a colony, newest first. */
 export function logsForCollection(logs: CareLog[], colId: string): CareLog[] {
   return logs.filter((l) => l.collectionId === colId).sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export function lastLogOfType(logs: CareLog[], colId: string, type: TaskType): string | null {
-  const ls = logsForCollection(logs, colId).filter((l) => l.taskType === type);
-  return ls.length ? ls[0].date : null;
 }
 
 /**
