@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "@/lib/constants";
 import { Icon, BrandMark } from "@/components/Icon";
 import { useData } from "@/components/providers/DataProvider";
+import { useChangeKeeper } from "@/components/modals/KeeperModal";
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
@@ -14,6 +15,7 @@ function isActive(href: string, pathname: string): boolean {
 export function Sidebar() {
   const pathname = usePathname();
   const { collections, sops, lastKeeper } = useData();
+  const changeKeeper = useChangeKeeper();
   const counts: Record<string, number> = { collections: collections.length, sops: sops.length };
 
   return (
@@ -42,9 +44,9 @@ export function Sidebar() {
             <small>On shift</small>
             <b>{lastKeeper}</b>
           </div>
-          <Link href="/login" className="keeper-switch">
-            Switch
-          </Link>
+          <button type="button" className="keeper-switch" onClick={changeKeeper}>
+            Change
+          </button>
         </div>
       ) : null}
       <div className="foot">

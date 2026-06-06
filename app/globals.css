@@ -67,7 +67,8 @@ h1,h2,h3,h4{margin:0;}
   text-transform:uppercase;color:#AFC58E;margin-bottom:1px;}
 .sidebar .keeperbar b{font-family:var(--serif);font-size:14px;color:#F5EAD0;}
 .sidebar .keeper-switch{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
-  color:#CBD9AE;background:rgba(255,255,255,.08);padding:5px 9px;border-radius:6px;white-space:nowrap;}
+  color:#CBD9AE;background:rgba(255,255,255,.08);padding:5px 9px;border-radius:6px;white-space:nowrap;
+  border:none;cursor:pointer;}
 .sidebar .keeper-switch:hover{background:rgba(255,255,255,.16);color:#F5EAD0;}
 
 /* main */
