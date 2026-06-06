@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toasts";
 import { useConfirm } from "@/components/ui/Modal";
 import { useImportDialog } from "@/components/modals/ImportDialog";
 import { PageHeader, Splash } from "@/components/ui/bits";
+import { dateKey } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 
 export default function SettingsPage() {
@@ -27,7 +28,7 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "bugbarn_backup_" + new Date().toISOString().slice(0, 10) + ".json";
+    a.download = "bugbarn_backup_" + dateKey(new Date()) + ".json";
     document.body.appendChild(a);
     a.click();
     a.remove();

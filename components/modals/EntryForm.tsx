@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CollectionEntry, LifeStage, PermitStatus } from "@/lib/types";
-import { uuid, nowISO } from "@/lib/format";
+import { uuid, nowISO, dateKey, localDateISO } from "@/lib/format";
 import { ENCLOSURES, STAGES, PERMIT_STATUSES, PERMIT_LABELS } from "@/lib/constants";
 import { uploadPhoto } from "@/lib/image";
 import { useData } from "@/components/providers/DataProvider";
@@ -32,7 +32,7 @@ type FormState = {
 };
 
 function toDateInput(iso?: string): string {
-  return iso ? new Date(iso).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+  return dateKey(iso ? iso : new Date());
 }
 
 function EntryForm({ existing }: { existing?: CollectionEntry }) {
@@ -105,7 +105,7 @@ function EntryForm({ existing }: { existing?: CollectionEntry }) {
       id: existing?.id ?? uuid(),
       commonName: form.commonName.trim(),
       scientificName: form.scientificName.trim(),
-      dateAdded: form.dateAdded ? new Date(form.dateAdded).toISOString() : nowISO(),
+      dateAdded: form.dateAdded ? localDateISO(form.dateAdded) : nowISO(),
       colonySize: Number(form.colonySize) || 0,
       lifeStages: form.lifeStages,
       enclosureType: form.enclosureType.trim(),

@@ -56,6 +56,13 @@ export function logTimestamp(dateStr?: string): string {
   return new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
 }
 
+/** Convert a YYYY-MM-DD date-input value to local-midnight ISO, so a picked
+ * date is stored and displayed as that exact calendar date (no UTC shift). */
+export function localDateISO(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toISOString();
+}
+
 /** Trim a long common name to its last two words for calendar chips. */
 export function shortName(s: string): string {
   const w = s.split(" ");

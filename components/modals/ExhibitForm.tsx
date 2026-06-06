@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { CollectionEntry } from "@/lib/types";
-import { nowISO } from "@/lib/format";
+import { nowISO, dateKey, localDateISO } from "@/lib/format";
 import { exhibitOf } from "@/lib/care";
 import { useData } from "@/components/providers/DataProvider";
 import { useModal, ModalShell, useConfirm } from "@/components/ui/Modal";
@@ -13,7 +13,7 @@ function CheckoutForm({ entry }: { entry: CollectionEntry }) {
   const { close } = useModal();
   const { saveCollection } = useData();
   const toast = useToast();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dateKey(new Date());
 
   const [custodian, setCustodian] = useState("");
   const [sentOut, setSentOut] = useState(today);
@@ -24,8 +24,8 @@ function CheckoutForm({ entry }: { entry: CollectionEntry }) {
       ...entry,
       exhibit: {
         onExhibit: true,
-        sentOut: sentOut ? new Date(sentOut).toISOString() : nowISO(),
-        dueBack: dueBack ? new Date(dueBack).toISOString() : null,
+        sentOut: sentOut ? localDateISO(sentOut) : nowISO(),
+        dueBack: dueBack ? localDateISO(dueBack) : null,
         custodian: custodian.trim(),
       },
     });
