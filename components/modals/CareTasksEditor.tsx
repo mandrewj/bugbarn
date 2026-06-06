@@ -24,8 +24,10 @@ function CareTasksEditor({ entry }: { entry: CollectionEntry }) {
   const add = () => setRows((rs) => [...rs, { id: uuid(), label: "", taskType: "feeding", frequency: "weekly" }]);
 
   function save() {
+    // Preserve each row's id so logs stay linked to their routine across edits;
+    // newly added rows already carry a fresh uuid from add().
     const careTasks: CareTask[] = rows.map((r) => ({
-      id: uuid(),
+      id: r.id,
       label: r.label.trim() || "Task",
       taskType: r.taskType,
       frequency: r.frequency,

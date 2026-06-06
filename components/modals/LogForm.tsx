@@ -63,6 +63,7 @@ function LogForm({ colId }: { colId: string | null }) {
       collectionId: entry.id,
       date: iso,
       frequency: t.frequency,
+      taskId: t.id,
       taskType: t.taskType,
       taskLabel: t.label,
       performedBy: by,

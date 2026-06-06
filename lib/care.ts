@@ -41,6 +41,18 @@ export function lastLogOfType(logs: CareLog[], colId: string, type: TaskType): s
   return ls.length ? ls[0].date : null;
 }
 
+/**
+ * Most recent log that satisfies a specific routine. Matches by the log's
+ * taskId; logs without one (care notes / pre-routine-tracking data) fall back
+ * to matching the task's type so legacy history still counts.
+ */
+export function lastLogOfTask(logs: CareLog[], colId: string, task: CareTask): string | null {
+  const ls = logsForCollection(logs, colId).filter((l) =>
+    l.taskId ? l.taskId === task.id : l.taskType === task.taskType,
+  );
+  return ls.length ? ls[0].date : null;
+}
+
 export function lastCareDate(logs: CareLog[], colId: string): string | null {
   const ls = logsForCollection(logs, colId);
   return ls.length ? ls[0].date : null;
@@ -65,7 +77,7 @@ export interface TaskStatus {
 /** For a single recurring task: when is it next due? */
 export function taskStatus(logs: CareLog[], colId: string, task: CareTask): TaskStatus {
   const iv = taskFreqDays(task.frequency);
-  const last = lastLogOfType(logs, colId, task.taskType);
+  const last = lastLogOfTask(logs, colId, task);
   if (!last) return { status: "overdue", daysSince: Infinity, nextDays: -Infinity, iv, last: null };
   const since = daysBetween(new Date(), last);
   const nextDays = iv - since;

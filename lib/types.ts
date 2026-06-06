@@ -71,6 +71,7 @@ export interface CareLog {
   collectionId: string;
   date: string; // ISO date
   frequency?: Frequency; // routine cadence; absent for unscheduled care notes
+  taskId?: string; // the specific CareTask this log satisfies (absent: care notes / legacy)
   taskType: TaskType;
   taskLabel?: string; // the routine's name (or "Care notes") this log records
   performedBy: string;
