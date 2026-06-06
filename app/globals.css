@@ -310,6 +310,19 @@ h1,h2,h3,h4{margin:0;}
 .taskrow input,.taskrow select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-size:13.5px;color:var(--ink);width:100%;}
 .taskrow input:focus,.taskrow select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(200,134,10,.12);}
 @media(max-width:560px){ .taskrow{grid-template-columns:1fr 1fr;} .taskrow .tk-label{grid-column:1/-1;} }
+
+/* Routine-structured care logging */
+.tasklog{display:flex;flex-direction:column;gap:7px;}
+.tasklog-row{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:9px;background:var(--paper);cursor:pointer;transition:border-color .12s,background .12s;}
+.tasklog-row:hover{border-color:var(--amber);}
+.tasklog-row.on{border-color:var(--amber);background:var(--med-bg);}
+.tasklog-row input{width:17px;height:17px;flex:none;accent-color:var(--amber);cursor:pointer;}
+.tasklog-row .tl-main{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.tasklog-row .tl-main b{font-size:14px;color:var(--ink);}
+.tasklog-row .tl-meta{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink3);
+  font-family:var(--mono);text-transform:capitalize;}
+.tasklog-row .tl-status{margin-left:auto;white-space:nowrap;}
 .segwrap{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;}
 .seg{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;background:none;border:none;color:var(--ink2);}
 .seg.on{background:var(--green);color:#EAF1DA;}

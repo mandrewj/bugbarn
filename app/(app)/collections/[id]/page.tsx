@@ -310,9 +310,10 @@ export default function DetailPage() {
                         <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--ink3)" }}>{fmtTime(l.date)}</div>
                       </td>
                       <td>
+                        {l.taskLabel ? <div style={{ fontWeight: 700, marginBottom: 3 }}>{l.taskLabel}</div> : null}
                         <span className={`tasktag tt-${l.taskType}`}>{l.taskType}</span>
                       </td>
-                      <td>{FREQUENCY_LABELS[l.frequency]}</td>
+                      <td>{l.frequency ? FREQUENCY_LABELS[l.frequency] : "—"}</td>
                       <td>{l.performedBy || "—"}</td>
                       <td>{l.colonyCountRecorded != null ? l.colonyCountRecorded : "—"}</td>
                       <td style={{ maxWidth: 220 }}>{l.notes || "—"}</td>

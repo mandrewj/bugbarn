@@ -70,8 +70,9 @@ export interface CareLog {
   id: string;
   collectionId: string;
   date: string; // ISO date
-  frequency: Frequency;
+  frequency?: Frequency; // routine cadence; absent for unscheduled care notes
   taskType: TaskType;
+  taskLabel?: string; // the routine's name (or "Care notes") this log records
   performedBy: string;
   notes: string;
   colonyCountRecorded: number | null; // if set, also updates the entry's colonySize
