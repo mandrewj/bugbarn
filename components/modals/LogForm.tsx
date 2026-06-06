@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CareLog } from "@/lib/types";
-import { uuid, nowISO } from "@/lib/format";
+import { uuid, nowISO, dateKey, logTimestamp } from "@/lib/format";
 import { FREQUENCY_LABELS } from "@/lib/constants";
 import { getCareTasks, taskStatus } from "@/lib/care";
 import { useData } from "@/components/providers/DataProvider";
@@ -13,7 +13,7 @@ function LogForm({ colId }: { colId: string | null }) {
   const { close } = useModal();
   const { collections, carelogs, saveLog, lastKeeper, setLastKeeper, keepers } = useData();
   const toast = useToast();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dateKey(new Date());
 
   const [collectionId, setCollectionId] = useState(colId || collections[0]?.id || "");
   const [date, setDate] = useState(today);
@@ -52,7 +52,7 @@ function LogForm({ colId }: { colId: string | null }) {
       return;
     }
 
-    const iso = new Date(date || today).toISOString();
+    const iso = logTimestamp(date);
     const by = performedBy.trim();
     const count = colonyCount === "" ? null : Number(colonyCount);
     // The count belongs to a census task if one was logged, else the first entry.

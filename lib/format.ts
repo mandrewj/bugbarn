@@ -43,6 +43,19 @@ export function dateKey(d: Date | string | number): string {
   );
 }
 
+/**
+ * Timestamp to store for a care log. If the picked date is today (local),
+ * record the actual submit instant; if backdated, use that local date at the
+ * current local time. Avoids the "YYYY-MM-DD parsed as UTC midnight" bug that
+ * shifted logs to the previous evening in negative-offset timezones.
+ */
+export function logTimestamp(dateStr?: string): string {
+  const now = new Date();
+  if (!dateStr || dateStr === dateKey(now)) return now.toISOString();
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
+}
+
 /** Trim a long common name to its last two words for calendar chips. */
 export function shortName(s: string): string {
   const w = s.split(" ");
