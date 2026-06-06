@@ -6,6 +6,8 @@ export type TaskType = "feeding" | "cleaning" | "census" | "observation" | "othe
 export type Frequency = "daily" | "every-other-day" | "weekly" | "monthly";
 export type Risk = "low" | "medium" | "high";
 export type LifeStage = "egg" | "larva" | "nymph" | "pupa" | "juvenile" | "adult";
+/** USDA regulatory classification. "permitted" = held under a USDA permit. */
+export type PermitStatus = "permitted" | "unpermitted";
 
 export interface CareTask {
   id: string;
@@ -37,6 +39,7 @@ export interface CollectionEntry {
   humidity: string;
   diet: string;
   feedingFrequency: string;
+  permitStatus: PermitStatus; // USDA permitted (regulated) vs unpermitted
   notes: string;
   photo: string | null; // Vercel Blob URL (prototype used a dataURL)
   sopId: string | null;

@@ -1,6 +1,14 @@
-import type { TaskType, Frequency, LifeStage, Risk } from "./types";
+import type { TaskType, Frequency, LifeStage, Risk, PermitStatus } from "./types";
 
 export const TASK_TYPES: TaskType[] = ["feeding", "cleaning", "census", "observation", "other"];
+
+export const PERMIT_STATUSES: PermitStatus[] = ["unpermitted", "permitted"];
+
+/** Badge/label text for USDA permit classification. */
+export const PERMIT_LABELS: Record<PermitStatus, string> = {
+  permitted: "USDA permitted",
+  unpermitted: "USDA unpermitted",
+};
 export const FREQUENCIES: Frequency[] = ["daily", "every-other-day", "weekly", "monthly"];
 
 /** Human-readable labels for the (hyphenated) frequency keys. */

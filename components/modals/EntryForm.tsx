@@ -2,9 +2,9 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CollectionEntry, LifeStage } from "@/lib/types";
+import type { CollectionEntry, LifeStage, PermitStatus } from "@/lib/types";
 import { uuid, nowISO } from "@/lib/format";
-import { ENCLOSURES, STAGES } from "@/lib/constants";
+import { ENCLOSURES, STAGES, PERMIT_STATUSES, PERMIT_LABELS } from "@/lib/constants";
 import { uploadPhoto } from "@/lib/image";
 import { useData } from "@/components/providers/DataProvider";
 import { useModal, ModalShell } from "@/components/ui/Modal";
@@ -27,6 +27,7 @@ type FormState = {
   humidity: string;
   feedingFrequency: string;
   diet: string;
+  permitStatus: PermitStatus;
   notes: string;
 };
 
@@ -62,6 +63,7 @@ function EntryForm({ existing }: { existing?: CollectionEntry }) {
     humidity: existing?.humidity ?? "",
     feedingFrequency: existing?.feedingFrequency ?? "",
     diet: existing?.diet ?? "",
+    permitStatus: existing?.permitStatus ?? "unpermitted",
     notes: existing?.notes ?? "",
   });
 
@@ -114,6 +116,7 @@ function EntryForm({ existing }: { existing?: CollectionEntry }) {
       humidity: form.humidity.trim(),
       diet: form.diet.trim(),
       feedingFrequency: form.feedingFrequency.trim(),
+      permitStatus: form.permitStatus,
       notes: form.notes.trim(),
       photo,
       sopId: existing?.sopId ?? null,
@@ -229,6 +232,24 @@ function EntryForm({ existing }: { existing?: CollectionEntry }) {
               <label key={s} className={`checkpill ${form.lifeStages.includes(s) ? "on" : ""}`}>
                 <input type="checkbox" checked={form.lifeStages.includes(s)} onChange={() => toggleStage(s)} />
                 {s}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="field full">
+          <label>USDA permit status</label>
+          <div className="radiorow">
+            {PERMIT_STATUSES.map((p) => (
+              <label key={p} className={`radiopill ${form.permitStatus === p ? "on" : ""}`}>
+                <input
+                  type="radio"
+                  name="permitStatus"
+                  checked={form.permitStatus === p}
+                  onChange={() => setForm((f) => ({ ...f, permitStatus: p }))}
+                  style={{ display: "none" }}
+                />
+                {PERMIT_LABELS[p]}
               </label>
             ))}
           </div>

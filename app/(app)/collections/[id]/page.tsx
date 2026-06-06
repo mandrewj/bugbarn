@@ -7,7 +7,7 @@ import { useData } from "@/components/providers/DataProvider";
 import { careStatus, getCareTasks, riskOf, sopForCollection, taskStatus, logsForCollection } from "@/lib/care";
 import { fmtDate, fmtTime } from "@/lib/format";
 import { SOP_SECTIONS, FREQUENCY_LABELS } from "@/lib/constants";
-import { Splash, RiskBadge } from "@/components/ui/bits";
+import { Splash, RiskBadge, PermitBadge } from "@/components/ui/bits";
 import { Icon } from "@/components/Icon";
 import { LocationCard } from "@/components/LocationCard";
 import { useEntryForm } from "@/components/modals/EntryForm";
@@ -131,6 +131,7 @@ export default function DetailPage() {
             </div>
           </div>
           <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <PermitBadge status={entry.permitStatus} />
             <RiskBadge risk={riskOf(sops, entry.id)} />
             {st.status === "overdue" ? (
               <span className="risk high">care overdue</span>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import type { Risk, CollectionEntry } from "@/lib/types";
+import type { Risk, CollectionEntry, PermitStatus } from "@/lib/types";
 import type { CareStatus } from "@/lib/care";
+import { PERMIT_LABELS } from "@/lib/constants";
 import { Icon, type IconName } from "@/components/Icon";
 
 const PLACEHOLDER_BG: React.CSSProperties = {
@@ -14,6 +15,13 @@ export function RiskBadge({ risk }: { risk: Risk | null | undefined }) {
   const cls = risk === "medium" ? "med" : risk;
   const label = risk === "medium" ? "med" : risk;
   return <span className={`risk ${cls}`}>{label} risk</span>;
+}
+
+/** USDA permit classification flag. Permitted = showy amber (compliance
+ * reminder); unpermitted = calm green. */
+export function PermitBadge({ status }: { status: PermitStatus | null | undefined }) {
+  const s: PermitStatus = status === "permitted" ? "permitted" : "unpermitted";
+  return <span className={`permit ${s}`}>{PERMIT_LABELS[s]}</span>;
 }
 
 export function Chip({ children, tone }: { children: ReactNode; tone?: "med" | "high" }) {

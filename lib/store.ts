@@ -69,6 +69,7 @@ export function migrate(data: Dataset): Dataset {
     ...c,
     lifeStages: c.lifeStages || [],
     careTasks: c.careTasks || [],
+    permitStatus: c.permitStatus || "unpermitted",
     exhibit: c.exhibit || { onExhibit: false, sentOut: null, dueBack: null, custodian: "" },
   }));
   return {

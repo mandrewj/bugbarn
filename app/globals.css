@@ -140,6 +140,9 @@ h1,h2,h3,h4{margin:0;}
 .risk.medium{background:var(--med-bg);color:var(--med-fg);}
 .risk.high{background:var(--high-bg);color:var(--high-fg);}
 .risk.none{background:#eee7d6;color:#a89a7e;}
+.permit{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.permit.permitted{background:var(--amber);color:#3B2007;box-shadow:0 1px 0 var(--amber-d);}
+.permit.unpermitted{background:var(--low-bg);color:var(--low-fg);}
 
 /* activity feed */
 .feed{display:flex;flex-direction:column;}
