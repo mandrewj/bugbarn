@@ -7,13 +7,17 @@ import { PrintProvider } from "@/components/ui/Print";
 import { DataProvider } from "@/components/providers/DataProvider";
 
 export function AppProviders({ children }: { children: ReactNode }) {
+  // ModalProvider must be innermost: modals are rendered by ModalProvider, so
+  // they need Data/Toast/Print contexts as ancestors. (Previously Modal sat
+  // above DataProvider, so any modal calling useData threw "useData must be
+  // used within DataProvider".)
   return (
     <ToastProvider>
-      <ModalProvider>
-        <DataProvider>
-          <PrintProvider>{children}</PrintProvider>
-        </DataProvider>
-      </ModalProvider>
+      <DataProvider>
+        <PrintProvider>
+          <ModalProvider>{children}</ModalProvider>
+        </PrintProvider>
+      </DataProvider>
     </ToastProvider>
   );
 }
