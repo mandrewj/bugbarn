@@ -13,7 +13,7 @@ function isActive(href: string, pathname: string): boolean {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { collections, sops } = useData();
+  const { collections, sops, lastKeeper } = useData();
   const counts: Record<string, number> = { collections: collections.length, sops: sops.length };
 
   return (
@@ -36,11 +36,23 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
+      {lastKeeper ? (
+        <div className="keeperbar">
+          <div>
+            <small>On shift</small>
+            <b>{lastKeeper}</b>
+          </div>
+          <Link href="/login" className="keeper-switch">
+            Switch
+          </Link>
+        </div>
+      ) : null}
       <div className="foot">
         PURDUE ENTOMOLOGY
         <br />
-        Field Station No. 7
-        <br />— est. 1925 —
+        created by the Insect Diversity
+        <br />
+        and Diagnostics Lab
       </div>
     </aside>
   );

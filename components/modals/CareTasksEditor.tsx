@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import type { CollectionEntry, CareTask, TaskType, Frequency } from "@/lib/types";
 import { uuid } from "@/lib/format";
-import { TASK_TYPES, FREQUENCIES } from "@/lib/constants";
+import { TASK_TYPES, FREQUENCIES, FREQUENCY_LABELS } from "@/lib/constants";
 import { getCareTasks } from "@/lib/care";
 import { useData } from "@/components/providers/DataProvider";
 import { useModal, ModalShell } from "@/components/ui/Modal";
@@ -67,7 +67,7 @@ function CareTasksEditor({ entry }: { entry: CollectionEntry }) {
             <select value={r.frequency} onChange={(e) => update(r.id, { frequency: e.target.value as Frequency })}>
               {FREQUENCIES.map((f) => (
                 <option key={f} value={f}>
-                  {f[0].toUpperCase() + f.slice(1)}
+                  {FREQUENCY_LABELS[f]}
                 </option>
               ))}
             </select>

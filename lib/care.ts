@@ -20,7 +20,7 @@ export function intervalDays(freqStr: string): number {
   return 7;
 }
 
-const FREQ_DAYS: Record<Frequency, number> = { daily: 1, weekly: 7, monthly: 30 };
+const FREQ_DAYS: Record<Frequency, number> = { daily: 1, "every-other-day": 2, weekly: 7, monthly: 30 };
 
 export function taskFreqDays(f: Frequency | string): number {
   return (FREQ_DAYS as Record<string, number>)[f] != null ? (FREQ_DAYS as Record<string, number>)[f] : intervalDays(f);
@@ -28,7 +28,7 @@ export function taskFreqDays(f: Frequency | string): number {
 
 export function feedingToFreq(str: string): Frequency {
   const d = intervalDays(str);
-  return d <= 2 ? "daily" : d <= 10 ? "weekly" : "monthly";
+  return d <= 1 ? "daily" : d <= 2 ? "every-other-day" : d <= 10 ? "weekly" : "monthly";
 }
 
 /** All logs for a colony, newest first. */

@@ -5,9 +5,9 @@
 //    when you connect Blob storage to the project).
 //  • Local dev:  data/bugbarn.json on disk (no token needed).
 //
-// Seeds the demo dataset on first run and migrates older shapes on
-// read. The whole dataset is read/written as one document — the app
-// is single-writer in practice (a few lab staff, rarely concurrent).
+// Starts empty on first run and migrates older shapes on read. The
+// whole dataset is read/written as one document — the app is single-
+// writer in practice (a few lab staff, rarely concurrent).
 // ============================================================
 
 import "server-only";
@@ -15,7 +15,6 @@ import { promises as fs } from "fs";
 import path from "path";
 import type { Dataset, CollectionEntry } from "./types";
 import { DATA_VERSION, emptyDataset } from "./types";
-import { seedData } from "./seed";
 
 const BLOB_PATH = "bugbarn.json";
 const LOCAL_PATH = path.join(process.cwd(), "data", "bugbarn.json");
@@ -80,13 +79,13 @@ export function migrate(data: Dataset): Dataset {
   };
 }
 
-/** Read the dataset, seeding the demo data if the store is empty. */
+/** Read the dataset, initializing an empty store on first run. */
 export async function readStore(): Promise<Dataset> {
   const data = await rawRead();
   if (!data || !Array.isArray(data.collections)) {
-    const seeded = seedData();
-    await rawWrite(seeded);
-    return seeded;
+    const empty = emptyDataset();
+    await rawWrite(empty);
+    return empty;
   }
   return migrate(data);
 }
@@ -94,13 +93,6 @@ export async function readStore(): Promise<Dataset> {
 /** Overwrite the whole dataset. */
 export async function writeStore(data: Dataset): Promise<void> {
   await rawWrite(migrate(data));
-}
-
-/** Reset the store to a freshly generated demo dataset. */
-export async function reseedStore(): Promise<Dataset> {
-  const seeded = seedData();
-  await rawWrite(seeded);
-  return seeded;
 }
 
 /** Wipe the store to an empty dataset. */

@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import type { CareLog, CollectionEntry, Dataset, Sop, BackupEnvelope } from "@/lib/types";
 import { DATA_VERSION } from "@/lib/types";
 import { nowISO } from "@/lib/format";
+import { getKeepers, getLastKeeper, rememberKeeper } from "@/lib/keeper";
 import { useToast } from "@/components/ui/Toasts";
-
-const LAST_KEEPER_KEY = "bugbarn_lastkeeper";
 
 interface DataApi {
   collections: CollectionEntry[];
@@ -21,12 +20,12 @@ interface DataApi {
   deleteLog: (id: string) => void;
   replaceDataset: (ds: Dataset) => void;
   mergeBackup: (env: BackupEnvelope) => void;
-  reseed: () => Promise<void>;
   clearAll: () => Promise<void>;
   reload: () => Promise<void>;
   exportEnvelope: () => BackupEnvelope;
   lastKeeper: string;
   setLastKeeper: (s: string) => void;
+  keepers: string[];
 }
 
 const DataContext = createContext<DataApi | null>(null);
@@ -45,6 +44,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [dataset, setDataset] = useState<Dataset>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [lastKeeper, setLastKeeperState] = useState("");
+  const [keepers, setKeepers] = useState<string[]>([]);
 
   const dataRef = useRef<Dataset>(EMPTY);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,7 +109,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     load();
-    setLastKeeperState(localStorage.getItem(LAST_KEEPER_KEY) || "");
+    setLastKeeperState(getLastKeeper());
+    setKeepers(getKeepers());
   }, [load]);
 
   // Best-effort flush if the tab is hidden/closed with a pending save.
@@ -233,29 +234,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [apply],
   );
 
-  const serverAction = useCallback(
-    async (action: "reseed" | "clear") => {
-      try {
-        const res = await fetch("/api/data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action }),
-        });
-        if (res.status === 401) {
-          router.push("/login");
-          return;
-        }
-        const ds = (await res.json()) as Dataset;
-        setStateFromServer(ds);
-      } catch {
-        toast("Action failed — check your connection", "err");
+  const clearAll = useCallback(async () => {
+    try {
+      const res = await fetch("/api/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "clear" }),
+      });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
       }
-    },
-    [router, toast, setStateFromServer],
-  );
-
-  const reseed = useCallback(() => serverAction("reseed"), [serverAction]);
-  const clearAll = useCallback(() => serverAction("clear"), [serverAction]);
+      const ds = (await res.json()) as Dataset;
+      setStateFromServer(ds);
+    } catch {
+      toast("Action failed — check your connection", "err");
+    }
+  }, [router, toast, setStateFromServer]);
 
   const exportEnvelope = useCallback(
     (): BackupEnvelope => ({
@@ -271,11 +266,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const setLastKeeper = useCallback((s: string) => {
     setLastKeeperState(s);
-    try {
-      localStorage.setItem(LAST_KEEPER_KEY, s);
-    } catch {
-      /* ignore */
-    }
+    rememberKeeper(s);
+    setKeepers(getKeepers());
   }, []);
 
   const value: DataApi = {
@@ -290,12 +282,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     deleteLog,
     replaceDataset,
     mergeBackup,
-    reseed,
     clearAll,
     reload: load,
     exportEnvelope,
     lastKeeper,
     setLastKeeper,
+    keepers,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

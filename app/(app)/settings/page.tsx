@@ -7,14 +7,16 @@ import { DATA_VERSION } from "@/lib/types";
 import { useData } from "@/components/providers/DataProvider";
 import { useToast } from "@/components/ui/Toasts";
 import { useConfirm } from "@/components/ui/Modal";
+import { useImportDialog } from "@/components/modals/ImportDialog";
 import { PageHeader, Splash } from "@/components/ui/bits";
 import { Icon } from "@/components/Icon";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { collections, sops, carelogs, loading, exportEnvelope, mergeBackup, replaceDataset, reseed, clearAll } = useData();
+  const { collections, sops, carelogs, loading, exportEnvelope, mergeBackup, replaceDataset, clearAll } = useData();
   const toast = useToast();
   const confirm = useConfirm();
+  const openImportDialog = useImportDialog();
   const fileInput = useRef<HTMLInputElement>(null);
 
   if (loading) return <Splash />;
@@ -50,18 +52,13 @@ export default function SettingsPage() {
         toast("Not a Bug Barn backup", "err");
         return;
       }
-      const counts = `${(data.bugbarn_collections || []).length} species, ${(data.bugbarn_sops || []).length} SOPs, ${(data.bugbarn_carelogs || []).length} logs`;
-      confirm({
-        title: "Import backup?",
-        message: `This file contains ${counts}. Merge into your current data, or replace everything?`,
-        confirmLabel: "Merge",
-        cancelLabel: "Replace all",
-        onConfirm: () => {
+      openImportDialog(data, {
+        onMerge: () => {
           mergeBackup(data);
           toast("Data merged");
           router.push("/");
         },
-        onCancel: () => {
+        onReplace: () => {
           replaceDataset({
             version: DATA_VERSION,
             collections: data.bugbarn_collections || [],
@@ -108,30 +105,6 @@ export default function SettingsPage() {
         <input ref={fileInput} type="file" accept="application/json,.json" className="hide" onChange={onImportFile} />
       </div>
 
-      <div className="setcard">
-        <h3>Reset sample data</h3>
-        <p>Reload the demo collection (8 species with SOPs and care history). This replaces your current data.</p>
-        <div className="setrow">
-          <button
-            className="btn btn-ghost"
-            onClick={() =>
-              confirm({
-                title: "Reload sample data?",
-                message: "This replaces your current collection with the demo dataset.",
-                confirmLabel: "Reload sample",
-                onConfirm: async () => {
-                  await reseed();
-                  toast("Sample data reloaded");
-                  router.push("/");
-                },
-              })
-            }
-          >
-            Reload sample data
-          </button>
-        </div>
-      </div>
-
       <div className="setcard danger">
         <h3 style={{ color: "#9a3210" }}>Clear all data</h3>
         <p>Permanently delete every species, SOP, and care log. Export a backup first if you might want it later.</p>
@@ -141,8 +114,9 @@ export default function SettingsPage() {
             onClick={() =>
               confirm({
                 title: "Clear all data?",
-                message: "This permanently deletes everything stored. This cannot be undone.",
+                message: "This permanently deletes every species, SOP, and care log stored. This cannot be undone.",
                 confirmLabel: "Clear everything",
+                confirmPhrase: "clear barn",
                 onConfirm: async () => {
                   await clearAll();
                   toast("All data cleared");

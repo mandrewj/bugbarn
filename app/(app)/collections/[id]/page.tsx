@@ -6,7 +6,7 @@ import type { Frequency } from "@/lib/types";
 import { useData } from "@/components/providers/DataProvider";
 import { careStatus, getCareTasks, riskOf, sopForCollection, taskStatus, logsForCollection } from "@/lib/care";
 import { fmtDate, fmtTime } from "@/lib/format";
-import { SOP_SECTIONS } from "@/lib/constants";
+import { SOP_SECTIONS, FREQUENCY_LABELS } from "@/lib/constants";
 import { Splash, RiskBadge } from "@/components/ui/bits";
 import { Icon } from "@/components/Icon";
 import { LocationCard } from "@/components/LocationCard";
@@ -19,7 +19,7 @@ import { useDuplicateEntry } from "@/components/modals/duplicate";
 import { usePrintSop } from "@/components/SopPrint";
 import { useConfirm } from "@/components/ui/Modal";
 
-const LOG_FILTERS: ("all" | Frequency)[] = ["all", "daily", "weekly", "monthly"];
+const LOG_FILTERS: ("all" | Frequency)[] = ["all", "daily", "every-other-day", "weekly", "monthly"];
 
 function Spec({ k, v, full }: { k: string; v: React.ReactNode; full?: boolean }) {
   return (
@@ -211,7 +211,7 @@ export default function DetailPage() {
                         <td>
                           <span className={`tasktag tt-${t.taskType}`}>{t.taskType}</span>
                         </td>
-                        <td style={{ textTransform: "capitalize" }}>{t.frequency}</td>
+                        <td>{FREQUENCY_LABELS[t.frequency]}</td>
                         <td style={{ whiteSpace: "nowrap" }}>{ts.last ? fmtDate(ts.last, { month: "short", day: "numeric" }) : "—"}</td>
                         <td>
                           {ts.status === "overdue" ? (
@@ -279,7 +279,7 @@ export default function DetailPage() {
             <div className="filterpills">
               {LOG_FILTERS.map((f) => (
                 <button key={f} className={`fpill ${logFilter === f ? "on" : ""}`} onClick={() => setLogFilter(f)}>
-                  {f === "all" ? "All" : f}
+                  {f === "all" ? "All" : FREQUENCY_LABELS[f]}
                 </button>
               ))}
             </div>
@@ -311,7 +311,7 @@ export default function DetailPage() {
                       <td>
                         <span className={`tasktag tt-${l.taskType}`}>{l.taskType}</span>
                       </td>
-                      <td style={{ textTransform: "capitalize" }}>{l.frequency}</td>
+                      <td>{FREQUENCY_LABELS[l.frequency]}</td>
                       <td>{l.performedBy || "—"}</td>
                       <td>{l.colonyCountRecorded != null ? l.colonyCountRecorded : "—"}</td>
                       <td style={{ maxWidth: 220 }}>{l.notes || "—"}</td>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readStore, writeStore, reseedStore, clearStore } from "@/lib/store";
+import { readStore, writeStore, clearStore } from "@/lib/store";
 import { verifyToken, SESSION_COOKIE } from "@/lib/auth";
 import { cookies } from "next/headers";
 import type { Dataset } from "@/lib/types";
@@ -58,7 +58,6 @@ export async function POST(req: Request) {
     /* noop */
   }
   try {
-    if (action === "reseed") return NextResponse.json(await reseedStore());
     if (action === "clear") return NextResponse.json(await clearStore());
   } catch (e) {
     return storeError(e);

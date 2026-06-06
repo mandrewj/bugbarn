@@ -3,14 +3,14 @@
 import { useCallback, useState } from "react";
 import type { CareLog, Frequency, TaskType } from "@/lib/types";
 import { uuid, nowISO } from "@/lib/format";
-import { TASK_TYPES, FREQUENCIES } from "@/lib/constants";
+import { TASK_TYPES, FREQUENCIES, FREQUENCY_LABELS } from "@/lib/constants";
 import { useData } from "@/components/providers/DataProvider";
 import { useModal, ModalShell } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toasts";
 
 function LogForm({ colId }: { colId: string | null }) {
   const { close } = useModal();
-  const { collections, saveLog, lastKeeper, setLastKeeper } = useData();
+  const { collections, saveLog, lastKeeper, setLastKeeper, keepers } = useData();
   const toast = useToast();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -93,14 +93,24 @@ function LogForm({ colId }: { colId: string | null }) {
             {FREQUENCIES.map((fr) => (
               <label key={fr} className={`radiopill ${frequency === fr ? "on" : ""}`}>
                 <input type="radio" name="frequency" checked={frequency === fr} onChange={() => setFrequency(fr)} style={{ display: "none" }} />
-                {fr}
+                {FREQUENCY_LABELS[fr]}
               </label>
             ))}
           </div>
         </div>
         <div className="field">
           <label>Performed by</label>
-          <input value={performedBy} onChange={(e) => setPerformedBy(e.target.value)} placeholder="Your name" />
+          <input
+            value={performedBy}
+            onChange={(e) => setPerformedBy(e.target.value)}
+            placeholder="Your name"
+            list="keeperList"
+          />
+          <datalist id="keeperList">
+            {keepers.map((k) => (
+              <option key={k} value={k} />
+            ))}
+          </datalist>
         </div>
         <div className="field">
           <label>

@@ -87,13 +87,23 @@ export interface ConfirmOptions {
   message: string;
   confirmLabel: string;
   cancelLabel?: string;
+  /** If set, the user must type this exact phrase before Confirm enables. */
+  confirmPhrase?: string;
   onConfirm?: () => void;
   onCancel?: () => void;
 }
 
-function ConfirmDialog({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel }: ConfirmOptions) {
+/** Loosely match a typed phrase: case-insensitive, trimmed, whitespace-collapsed. */
+export function phraseMatches(typed: string, target: string): boolean {
+  const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  return norm(typed) === norm(target);
+}
+
+function ConfirmDialog({ title, message, confirmLabel, cancelLabel, confirmPhrase, onConfirm, onCancel }: ConfirmOptions) {
   const { close } = useModal();
+  const [typed, setTyped] = useState("");
   const danger = /delete|clear|remove|replace/i.test(confirmLabel);
+  const phraseOk = !confirmPhrase || phraseMatches(typed, confirmPhrase);
   return (
     <ModalShell
       kicker="Please confirm"
@@ -111,6 +121,7 @@ function ConfirmDialog({ title, message, confirmLabel, cancelLabel, onConfirm, o
           </button>
           <button
             className={`btn ${danger ? "btn-danger" : "btn-primary"}`}
+            disabled={!phraseOk}
             onClick={() => {
               close();
               onConfirm?.();
@@ -122,6 +133,14 @@ function ConfirmDialog({ title, message, confirmLabel, cancelLabel, onConfirm, o
       }
     >
       <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink)" }}>{message}</p>
+      {confirmPhrase ? (
+        <div className="field full" style={{ marginTop: 16 }}>
+          <label>
+            Type <b>{confirmPhrase}</b> to confirm
+          </label>
+          <input value={typed} autoFocus autoComplete="off" placeholder={confirmPhrase} onChange={(e) => setTyped(e.target.value)} />
+        </div>
+      ) : null}
     </ModalShell>
   );
 }

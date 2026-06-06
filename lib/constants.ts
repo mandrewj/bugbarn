@@ -1,7 +1,15 @@
 import type { TaskType, Frequency, LifeStage, Risk } from "./types";
 
 export const TASK_TYPES: TaskType[] = ["feeding", "cleaning", "census", "observation", "other"];
-export const FREQUENCIES: Frequency[] = ["daily", "weekly", "monthly"];
+export const FREQUENCIES: Frequency[] = ["daily", "every-other-day", "weekly", "monthly"];
+
+/** Human-readable labels for the (hyphenated) frequency keys. */
+export const FREQUENCY_LABELS: Record<Frequency, string> = {
+  daily: "Daily",
+  "every-other-day": "Every other day",
+  weekly: "Weekly",
+  monthly: "Monthly",
+};
 export const STAGES: LifeStage[] = ["egg", "larva", "nymph", "pupa", "juvenile", "adult"];
 export const RISKS: Risk[] = ["low", "medium", "high"];
 

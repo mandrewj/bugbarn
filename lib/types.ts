@@ -3,7 +3,7 @@
 // ============================================================
 
 export type TaskType = "feeding" | "cleaning" | "census" | "observation" | "other";
-export type Frequency = "daily" | "weekly" | "monthly";
+export type Frequency = "daily" | "every-other-day" | "weekly" | "monthly";
 export type Risk = "low" | "medium" | "high";
 export type LifeStage = "egg" | "larva" | "nymph" | "pupa" | "juvenile" | "adult";
 

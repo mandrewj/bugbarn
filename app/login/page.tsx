@@ -1,18 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/Icon";
+import { getKeepers, getLastKeeper, rememberKeeper } from "@/lib/keeper";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [keeper, setKeeper] = useState("");
   const [code, setCode] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
   const [error, setError] = useState(false);
+  const [keeperError, setKeeperError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [knownKeepers, setKnownKeepers] = useState<string[]>([]);
+
+  useEffect(() => {
+    setKeeper(getLastKeeper());
+    setKnownKeepers(getKeepers());
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!keeper.trim()) {
+      setKeeperError(true);
+      return;
+    }
     setBusy(true);
     setError(false);
     try {
@@ -22,6 +35,7 @@ export default function LoginPage() {
         body: JSON.stringify({ code, website }),
       });
       if (res.ok) {
+        rememberKeeper(keeper);
         router.push("/");
         router.refresh();
       } else {
@@ -47,7 +61,7 @@ export default function LoginPage() {
           </div>
         </div>
         <h1>Keeper access</h1>
-        <p className="lead">Enter the shared access code to open the husbandry portal.</p>
+        <p className="lead">Sign in with your name and the shared access code to open the husbandry portal.</p>
 
         {/* honeypot: hidden from humans, tempting to bots */}
         <input
@@ -60,6 +74,28 @@ export default function LoginPage() {
           style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
           aria-hidden="true"
         />
+
+        <div className={`field full ${keeperError ? "err" : ""}`}>
+          <label htmlFor="keeper">Keeper name</label>
+          <input
+            id="keeper"
+            type="text"
+            value={keeper}
+            autoComplete="off"
+            list="knownKeepers"
+            onChange={(e) => {
+              setKeeper(e.target.value);
+              setKeeperError(false);
+            }}
+            placeholder="Who's on shift?"
+          />
+          <datalist id="knownKeepers">
+            {knownKeepers.map((k) => (
+              <option key={k} value={k} />
+            ))}
+          </datalist>
+          {keeperError ? <div className="errmsg">Enter your name so care logs are attributed.</div> : null}
+        </div>
 
         <div className={`field full ${error ? "err" : ""}`}>
           <label htmlFor="code">Access code</label>
