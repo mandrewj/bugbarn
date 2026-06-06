@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bug Barn — Living Collections</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Spectral:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet" />
+<style>
+/* ====================== TOKENS ====================== */
+:root{
+  --green:#2D5016; --green-d:#24400f; --green-l:#3c6b1f;
+  --amber:#C8860A; --amber-d:#9a6708;
+  --cream:#F5F0E8; --paper:#FFFDF8; --paper2:#FBF6EC;
+  --ink:#3B2007; --ink2:#6f6244; --ink3:#998a6b;
+  --sage:#7A9E5A;
+  --line:#E3D7BD; --line2:#EFE7D3; --dash:#C9B894;
+  --low-bg:#DCEBC8; --low-fg:#3c6b1f;
+  --med-bg:#F6E2BC; --med-fg:#946008;
+  --high-bg:#F3CDBE; --high-fg:#9a3210;
+  --serif:'Merriweather',Georgia,'Times New Roman',serif;
+  --sans:'Source Sans 3',system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:'IBM Plex Mono','SFMono-Regular',Menlo,monospace;
+  --sci:'Spectral',Georgia,serif;
+  --shadow:0 1px 0 rgba(59,32,7,.04);
+  --shadow2:0 8px 30px -10px rgba(59,32,7,.28);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--cream);
+  -webkit-font-smoothing:antialiased; line-height:1.45;
+}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+::selection{background:rgba(200,134,10,.25);}
+a{color:inherit;}
+h1,h2,h3,h4{margin:0;}
+
+/* paper grain on the whole app */
+.app-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(123,84,40,.045) 1px,transparent 1px);
+  background-size:4px 4px;opacity:.7;}
+
+/* ====================== LAYOUT ====================== */
+.shell{display:grid;grid-template-columns:236px 1fr;min-height:100vh;position:relative;z-index:1;}
+
+/* sidebar / spine */
+.sidebar{background:var(--green);color:#EDE6D6;padding:24px 18px 24px;
+  border-right:3px solid var(--green-d);position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:26px;padding:0 4px;}
+.brand .mark{width:40px;height:40px;border-radius:50%;background:var(--amber);
+  display:grid;place-items:center;color:var(--green);flex:none;
+  box-shadow:inset 0 0 0 3px rgba(45,80,22,.35);}
+.brand b{font-family:var(--serif);font-weight:900;font-size:18px;line-height:1.05;display:block;color:#F5EAD0;}
+.brand small{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#AFC58E;}
+.nav{display:flex;flex-direction:column;gap:2px;}
+.nav button{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;
+  font-size:14.5px;color:#DCD3BF;background:none;border:none;font-weight:600;text-align:left;width:100%;
+  transition:background .12s,color .12s;}
+.nav button:hover{background:rgba(255,255,255,.06);color:#F5EAD0;}
+.nav button.on{background:rgba(200,134,10,.18);color:#F5EAD0;box-shadow:inset 0 0 0 1px rgba(200,134,10,.4);}
+.nav button svg{width:18px;height:18px;flex:none;opacity:.85;}
+.nav button.on svg{opacity:1;color:var(--amber);}
+.nav .count{margin-left:auto;font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.18);
+  padding:1px 7px;border-radius:999px;color:#CBD9AE;}
+.sidebar .foot{margin-top:auto;font-family:var(--mono);font-size:10px;color:#8FAE6B;line-height:1.7;
+  border-top:1px dashed rgba(175,197,142,.4);padding-top:14px;}
+.sidebar .foot .seedwarn{color:#E8C06A;margin-top:6px;}
+
+/* main */
+.main{padding:28px 36px 56px;min-width:0;max-width:1320px;}
+@media(max-width:1100px){ .main{padding:24px 22px 48px;} }
+
+/* page header */
+.phead{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:22px;flex-wrap:wrap;}
+.phead > div:first-child{flex:1 1 auto;min-width:0;}
+.phead .btn{flex:none;}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin:0 0 5px;}
+.ptitle{font-family:var(--serif);font-weight:900;font-size:29px;line-height:1.1;}
+.psub{font-family:var(--mono);font-size:12px;color:var(--ink2);margin-top:6px;}
+
+/* ====================== BUTTONS ====================== */
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;font-weight:700;
+  font-size:14px;padding:10px 16px;transition:transform .08s,box-shadow .12s,background .12s;white-space:nowrap;}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--amber);color:#3B2007;box-shadow:0 2px 0 var(--amber-d);}
+.btn-primary:hover{background:#d8941a;}
+.btn-primary:active{box-shadow:0 1px 0 var(--amber-d);}
+.btn-green{background:var(--green);color:#EAF1DA;box-shadow:0 2px 0 var(--green-d);}
+.btn-green:hover{background:#356019;}
+.btn-ghost{background:var(--paper);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow);}
+.btn-ghost:hover{background:#fff;border-color:var(--dash);}
+.btn-danger{background:#fff;color:#9a3210;border:1px solid #E6BBA8;}
+.btn-danger:hover{background:#fdf3ef;}
+.btn-sm{padding:7px 12px;font-size:13px;}
+.btn svg{width:16px;height:16px;}
+.btn-icon{background:none;border:none;width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--ink2);}
+.btn-icon:hover{background:var(--line2);color:var(--ink);}
+
+/* ====================== STAT CARDS ====================== */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+@media(max-width:760px){ .stats{grid-template-columns:repeat(2,1fr);} }
+.stat{background:var(--paper);border:1.5px dashed var(--dash);border-radius:11px;padding:16px 16px 14px;position:relative;box-shadow:var(--shadow);}
+.stat .pin{position:absolute;top:12px;right:13px;width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 1px 2px rgba(0,0,0,.3);}
+.stat .n{font-family:var(--serif);font-weight:900;font-size:31px;line-height:1;color:var(--green);}
+.stat .l{font-size:12.5px;color:var(--ink2);margin-top:7px;font-weight:600;}
+.stat.warn .n{color:#B5450B;} .stat.warn .pin{background:#B5450B;}
+.stat.amber .n{color:var(--amber-d);}
+
+/* ====================== PANELS ====================== */
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start;}
+@media(max-width:980px){ .grid2{grid-template-columns:1fr;} }
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:18px 20px;box-shadow:var(--shadow);}
+.panel-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
+.panel-t{font-family:var(--serif);font-weight:700;font-size:16px;display:flex;align-items:center;gap:9px;}
+.panel-t::before{content:"";width:6px;height:18px;background:var(--amber);border-radius:2px;flex:none;}
+.link{font-family:var(--mono);font-size:11.5px;color:var(--green-l);font-weight:600;background:none;border:none;text-decoration:none;}
+.link:hover{color:var(--amber-d);text-decoration:underline;}
+
+/* species mini-rows (dashboard) */
+.srow{display:flex;gap:13px;padding:11px 0;border-bottom:1px dotted var(--line);align-items:center;cursor:pointer;}
+.srow:last-child{border-bottom:none;}
+.srow:hover .srow-name{color:var(--amber-d);}
+.srow-thumb{width:60px;height:60px;border-radius:8px;flex:none;border:1px solid var(--dash);object-fit:cover;background:#e6ddc8;}
+.srow-name{font-size:15.5px;font-family:var(--serif);font-weight:700;transition:color .12s;}
+.sci{font-style:italic;font-family:var(--sci);color:var(--ink2);}
+.srow .sci{font-size:13px;margin:1px 0 6px;}
+.metarow{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.chip{font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:999px;background:var(--line2);color:var(--ink2);white-space:nowrap;}
+
+/* risk badges */
+.risk{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.risk.low{background:var(--low-bg);color:var(--low-fg);}
+.risk.med{background:var(--med-bg);color:var(--med-fg);}
+.risk.high{background:var(--high-bg);color:var(--high-fg);}
+.risk.none{background:#eee7d6;color:#a89a7e;}
+
+/* activity feed */
+.feed{display:flex;flex-direction:column;}
+.fitem{display:flex;gap:11px;padding:10px 0;border-bottom:1px dotted var(--line);}
+.fitem:last-child{border:none;}
+.fitem > div{flex:1;min-width:0;}
+.fdot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none;}
+.fitem .ft{font-size:13.5px;line-height:1.4;}
+.fitem .ft b{font-weight:700;}
+.fitem .fw{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:3px;}
+
+/* alert banner */
+.alert{display:flex;gap:12px;align-items:flex-start;background:#FBF1E2;border:1px solid #EBD3A6;
+  border-left:4px solid var(--amber);border-radius:10px;padding:13px 16px;margin-bottom:22px;}
+.alert svg{width:20px;height:20px;color:var(--amber-d);flex:none;margin-top:1px;}
+.alert b{font-weight:700;} .alert .at{font-size:13.5px;color:var(--ink);}
+.alert .names{font-family:var(--sci);font-style:italic;}
+
+/* ====================== TOOLBAR (collections) ====================== */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
+.search{flex:1;min-width:200px;position:relative;}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink3);}
+.search input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--line);border-radius:9px;
+  background:var(--paper);font-size:14px;color:var(--ink);}
+.search input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(200,134,10,.12);}
+.filterpills{display:flex;gap:6px;flex-wrap:wrap;}
+.fpill{font-size:12.5px;font-family:var(--sans);font-weight:600;padding:8px 13px;border-radius:999px;
+  background:var(--paper);border:1px solid var(--line);color:var(--ink2);}
+.fpill:hover{border-color:var(--dash);}
+.fpill.on{background:var(--green);color:#EAF1DA;border-color:var(--green);}
+
+/* species card grid */
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:18px;}
+.scard{background:var(--paper);border:1px solid var(--line);border-radius:13px;overflow:hidden;
+  box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-color .12s;cursor:pointer;display:flex;flex-direction:column;}
+.scard:hover{transform:translateY(-3px);box-shadow:0 12px 26px -14px rgba(59,32,7,.3);border-color:var(--dash);}
+.scard .photo{height:148px;background:#e6ddc8;position:relative;overflow:hidden;}
+.scard .photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.scard .photo .ph{position:absolute;inset:0;display:flex;align-items:flex-end;
+  background-color:#ddd3bd;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.045) 0 8px,transparent 8px 16px);}
+.scard .photo .ph span{font-family:var(--mono);font-size:10px;color:rgba(59,32,7,.5);padding:7px 9px;text-transform:uppercase;letter-spacing:.04em;}
+.scard .photo .riskbadge{position:absolute;top:10px;right:10px;}
+.scard .bd{padding:13px 15px 15px;display:flex;flex-direction:column;flex:1;}
+.scard h4{font-family:var(--serif);font-weight:700;font-size:16px;line-height:1.2;}
+.scard .sci{font-size:13px;margin:2px 0 10px;}
+.scard .cardmeta{margin-top:auto;display:flex;gap:7px;flex-wrap:wrap;}
+.scard .added{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:10px;}
+.scard .enclabel{font-family:var(--mono);font-size:10.5px;color:var(--green-l);margin:-4px 0 8px;}
+.scard .photo .exhibitribbon{position:absolute;bottom:0;left:0;right:0;background:rgba(148,96,8,.92);color:#FBF1DD;
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;text-align:center;}
+.empty{text-align:center;padding:60px 20px;color:var(--ink2);}
+.empty svg{width:46px;height:46px;color:var(--dash);margin-bottom:14px;}
+.empty h3{font-family:var(--serif);font-size:19px;margin-bottom:6px;color:var(--ink);}
+
+/* ====================== DETAIL VIEW ====================== */
+.detail-grid{display:grid;grid-template-columns:300px 1fr;gap:26px;align-items:start;}
+@media(max-width:880px){ .detail-grid{grid-template-columns:1fr;} }
+.detail-photo{border-radius:13px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);background:#e6ddc8;}
+.detail-photo .imgwrap{height:240px;position:relative;}
+.detail-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.backlink{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;
+  color:var(--ink2);background:none;border:none;margin-bottom:14px;padding:4px 0;}
+.backlink:hover{color:var(--amber-d);}
+.backlink svg{width:14px;height:14px;}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden;}
+.specs .sp{background:var(--paper);padding:11px 14px;}
+.specs .sp.full{grid-column:1/-1;}
+.specs .sp .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);}
+.specs .sp .v{font-size:14px;color:var(--ink);margin-top:3px;font-weight:600;}
+.stages{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;}
+.stagepill{font-size:10.5px;font-family:var(--mono);padding:2px 8px;border-radius:5px;background:var(--low-bg);color:var(--low-fg);text-transform:capitalize;}
+
+/* SOP summary box */
+.sopbox{background:linear-gradient(180deg,#FBF6EC,#FFFDF8);border:1px solid var(--line);border-radius:13px;padding:18px 20px;}
+.sopbox.empty-sop{border-style:dashed;border-color:var(--dash);text-align:center;}
+.sop-sec{padding:9px 0;border-bottom:1px dotted var(--line);}
+.sop-sec:last-child{border:none;}
+.sop-sec .sk{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber-d);}
+.sop-sec .sv{font-size:13.5px;color:var(--ink);margin-top:3px;white-space:pre-wrap;}
+
+/* care log table */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;}
+.tbl th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink3);font-weight:600;padding:8px 10px;border-bottom:1.5px solid var(--line);}
+.tbl td{padding:9px 10px;border-bottom:1px dotted var(--line);color:var(--ink);vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--paper2);}
+.tasktag{font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:5px;text-transform:capitalize;}
+.tt-feeding{background:#E7EFD6;color:#4a7322;}
+.tt-cleaning{background:#DCE9F0;color:#3a6a8a;}
+.tt-census{background:#F3E6C6;color:#946008;}
+.tt-observation{background:#EBE2D2;color:#7a6a4f;}
+.tt-other{background:#EFE7D3;color:#6f6244;}
+
+/* ====================== MODAL ====================== */
+.scrim{position:fixed;inset:0;background:rgba(45,32,12,.5);backdrop-filter:blur(2px);z-index:60;
+  display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;}
+.modal{background:var(--cream);border-radius:16px;width:100%;max-width:680px;box-shadow:var(--shadow2);
+  border:1px solid var(--dash);position:relative;transform:translateY(10px);animation:rise .2s ease forwards;}
+.modal.wide{max-width:860px;}
+@keyframes rise{to{transform:translateY(0);}}
+.modal-h{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 24px 14px;
+  border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--cream);border-radius:16px 16px 0 0;z-index:2;}
+.modal-h .kicker{margin-bottom:4px;}
+.modal-h h2{font-family:var(--serif);font-weight:900;font-size:21px;}
+.modal-b{padding:20px 24px;}
+.modal-f{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--line);
+  position:sticky;bottom:0;background:var(--cream);border-radius:0 0 16px 16px;}
+.modal-f .left{margin-right:auto;}
+
+/* forms */
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:12.5px;font-weight:700;color:var(--ink);}
+.field label .req{color:#B5450B;}
+.field .hint{font-size:11px;color:var(--ink3);font-family:var(--mono);}
+.field input,.field select,.field textarea{padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+  background:var(--paper);font-size:14px;color:var(--ink);width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(200,134,10,.12);}
+.field input::placeholder,.field textarea::placeholder{color:#b8ab8f;}
+.field input.sciinput{font-family:var(--sci);font-style:italic;}
+.field textarea{resize:vertical;min-height:74px;line-height:1.5;}
+.field.err input,.field.err select,.field.err textarea{border-color:#C0563A;background:#fdf4f1;}
+.errmsg{font-size:11.5px;color:#9a3210;font-weight:600;}
+.checkrow{display:flex;gap:8px;flex-wrap:wrap;}
+.checkpill{display:flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;
+  background:var(--paper);font-size:13px;font-weight:600;cursor:pointer;text-transform:capitalize;user-select:none;}
+.checkpill:hover{border-color:var(--dash);}
+.checkpill.on{background:var(--low-bg);border-color:var(--sage);color:var(--low-fg);}
+.checkpill input{display:none;}
+.radiorow{display:flex;gap:8px;}
+.radiopill{flex:1;text-align:center;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--paper);
+  font-size:13px;font-weight:600;cursor:pointer;text-transform:capitalize;}
+.radiopill.on{background:var(--green);color:#EAF1DA;border-color:var(--green);}
+
+/* image dropzone */
+.dropzone{grid-column:1/-1;border:2px dashed var(--dash);border-radius:11px;padding:16px;
+  display:flex;align-items:center;gap:16px;background:var(--paper);transition:border-color .12s,background .12s;}
+.dropzone.drag{border-color:var(--amber);background:#FBF1E2;}
+.dropzone .dzprev{width:84px;height:84px;border-radius:9px;flex:none;background:#e6ddc8;overflow:hidden;
+  display:grid;place-items:center;border:1px solid var(--dash);}
+.dropzone .dzprev img{width:100%;height:100%;object-fit:cover;}
+.dropzone .dzprev svg{width:26px;height:26px;color:var(--dash);}
+.dropzone .dztext{font-size:13px;color:var(--ink2);}
+.dropzone .dztext b{color:var(--ink);font-weight:700;}
+.dropzone .dzbtns{margin-top:7px;display:flex;gap:8px;}
+
+/* ====================== SCHEDULE ====================== */
+/* location / exhibit card */
+.loccard{margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:14px 15px;box-shadow:var(--shadow);}
+.loccard.exhibit{background:linear-gradient(180deg,#FBF1E2,#FFFDF8);border-color:#EBD3A6;}
+.loccard.exhibit.over{border-color:#E6BBA8;background:linear-gradient(180deg,#FBEAE2,#FFFDF8);}
+.loccard .loctop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.locpill{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;}
+.locpill svg{width:16px;height:16px;}
+.locpill.barn{color:var(--green-l);} .locpill.exhibit{color:var(--med-fg);}
+.locrow{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13px;border-top:1px dotted var(--line);}
+.locrow:first-of-type{border-top:none;}
+.locrow .lk{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding-top:2px;}
+.locrow .lv{font-weight:600;text-align:right;color:var(--ink);} .locrow .lv.over{color:#9a3210;}
+/* care-task editor rows */
+.tasklist{display:flex;flex-direction:column;gap:9px;}
+.taskrow{display:grid;grid-template-columns:1fr 130px 120px 36px;gap:8px;align-items:center;}
+.taskrow input,.taskrow select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-size:13.5px;color:var(--ink);width:100%;}
+.taskrow input:focus,.taskrow select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(200,134,10,.12);}
+@media(max-width:560px){ .taskrow{grid-template-columns:1fr 1fr;} .taskrow .tk-label{grid-column:1/-1;} }
+.segwrap{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;}
+.seg{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;background:none;border:none;color:var(--ink2);}
+.seg.on{background:var(--green);color:#EAF1DA;}
+.cal-nav{display:flex;align-items:center;gap:12px;}
+.cal-nav .mlabel{font-family:var(--serif);font-weight:700;font-size:17px;min-width:170px;text-align:center;}
+.calendar{background:var(--paper);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:var(--shadow);}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);background:var(--green);}
+.cal-head div{padding:9px 8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#CBD9AE;text-align:center;}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:96px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 7px;position:relative;}
+.cal-cell:nth-child(7n){border-right:none;}
+.cal-cell.dim{background:var(--paper2);color:var(--ink3);}
+.cal-cell.today{background:#FBF1E2;}
+.cal-cell .dnum{font-family:var(--mono);font-size:11.5px;color:var(--ink2);font-weight:600;}
+.cal-cell.today .dnum{color:var(--amber-d);}
+.cal-cell.today .dnum::after{content:" • today";font-size:9px;}
+.cal-dot{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px;}
+.cal-dot span{width:7px;height:7px;border-radius:50%;}
+.cal-evt{font-size:10.5px;padding:2px 5px;border-radius:4px;margin-top:3px;line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.cal-more{font-size:10px;color:var(--ink3);font-family:var(--mono);margin-top:2px;cursor:pointer;}
+.cal-cell.clickable{cursor:pointer;} .cal-cell.clickable:hover{background:#fcf6ea;}
+
+/* weekly agenda */
+.agenda{display:flex;flex-direction:column;gap:12px;}
+.aday{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+.aday.today{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber);}
+.aday-h{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;background:var(--paper2);border-bottom:1px solid var(--line);}
+.aday-h .ad{font-family:var(--serif);font-weight:700;font-size:15px;}
+.aday-h .ad small{font-family:var(--mono);font-weight:400;color:var(--ink3);font-size:11px;margin-left:8px;}
+.aday-h .acount{font-family:var(--mono);font-size:11px;color:var(--ink2);}
+.atask{display:flex;align-items:center;gap:11px;padding:10px 16px;border-bottom:1px dotted var(--line);}
+.atask:last-child{border:none;}
+.atask .aname{font-weight:600;font-size:13.5px;}
+.atask .aby{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:auto;}
+.aday .none{padding:14px 16px;color:var(--ink3);font-size:13px;font-style:italic;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0 0;font-size:12px;color:var(--ink2);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:10px;height:10px;border-radius:50%;display:block;}
+
+/* settings */
+.setcard{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow);}
+.setcard h3{font-family:var(--serif);font-size:17px;margin-bottom:4px;}
+.setcard p{font-size:13.5px;color:var(--ink2);margin:0 0 14px;max-width:60ch;}
+.setcard.danger{border-color:#E6BBA8;background:#fdf6f3;}
+.setrow{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* ====================== TOASTS ====================== */
+.toasts{position:fixed;bottom:24px;right:24px;z-index:90;display:flex;flex-direction:column;gap:10px;}
+.toast{background:var(--green);color:#EAF1DA;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow2);
+  display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;min-width:230px;max-width:340px;
+  border-left:4px solid var(--amber);transform:translateX(18px);animation:toastin .22s ease forwards;}
+.toast.out{opacity:0;transform:translateX(18px);transition:opacity .22s ease,transform .22s ease;}
+.toast svg{width:18px;height:18px;flex:none;color:#CBE0A2;}
+.toast.err{border-left-color:#E08552;} .toast.err svg{color:#F0B48E;}
+@keyframes toastin{from{transform:translateX(18px);}to{transform:translateX(0);}}
+
+/* confirm dialog */
+.confirm{max-width:420px;}
+.confirm .modal-b{font-size:14px;color:var(--ink);line-height:1.55;}
+
+/* misc */
+.spacer{height:22px;}
+.sectiontitle{font-family:var(--serif);font-weight:700;font-size:17px;margin:26px 0 12px;display:flex;align-items:center;gap:9px;}
+.sectiontitle::before{content:"";width:6px;height:18px;background:var(--amber);border-radius:2px;}
+.muted{color:var(--ink3);font-size:13px;}
+.hide{display:none!important;}
+
+/* ====================== PRINT (SOP) ====================== */
+@media print{
+  body{background:#fff;}
+  .app-bg,.sidebar,.toasts,.no-print{display:none!important;}
+  .shell{display:block;}
+  .main{padding:0;max-width:none;}
+}
+#printArea{display:none;}
+@media print{
+  #printArea{display:block;font-family:var(--serif);color:#1c1206;padding:0;}
+  #printArea .p-title{font-size:24px;font-weight:900;border-bottom:3px double #2D5016;padding-bottom:8px;margin-bottom:4px;}
+  #printArea .p-sci{font-family:var(--sci);font-style:italic;font-size:15px;color:#555;margin-bottom:18px;}
+  #printArea .p-meta{font-family:var(--mono);font-size:10px;color:#777;margin-bottom:20px;}
+  #printArea .p-sec{margin-bottom:16px;break-inside:avoid;}
+  #printArea .p-sec h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#2D5016;
+    border-bottom:1px solid #ccc;padding-bottom:3px;margin-bottom:6px;font-family:var(--sans);}
+  #printArea .p-sec p{font-family:var(--sans);font-size:12.5px;line-height:1.55;white-space:pre-wrap;margin:0;}
+  #printArea .p-foot{margin-top:24px;font-family:var(--mono);font-size:9px;color:#999;border-top:1px solid #ccc;padding-top:8px;}
+  #printArea .p-risk{display:inline-block;padding:2px 8px;border:1px solid #999;border-radius:4px;font-family:var(--sans);font-size:11px;font-weight:700;}
+}
+</style>
+</head>
+<body>
+<div class="app-bg"></div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <ellipse cx="12" cy="14" rx="4.4" ry="5.6" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="6" r="2.5" fill="currentColor" stroke="none"/>
+          <path d="M9 9 L4.5 6 M15 9 L19.5 6 M8.4 13 L3.5 12 M15.6 13 L20.5 12 M8.6 17 L4.5 19 M15.4 17 L19.5 19"/>
+        </svg>
+      </div>
+      <div><b>Bug Barn</b><small>Living Collections</small></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="foot">
+      PURDUE ENTOMOLOGY<br/>Field Station No. 7<br/>— est. 1925 —
+      <div class="seedwarn hide" id="seedNote">◆ sample data loaded</div>
+    </div>
+  </aside>
+  <main class="main" id="view"></main>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<div id="modalRoot"></div>
+<div id="printArea"></div>
+
+<script>
+/* ============================================================
+   BUG BARN — Living Collections Dashboard
+   Single-file, offline, vanilla JS. Data in localStorage.
+   ============================================================ */
+"use strict";
+
+/* ===== SECTION: DATA LAYER ===== */
+const KEYS = { col:'bugbarn_collections', sop:'bugbarn_sops', log:'bugbarn_carelogs', seeded:'bugbarn_seeded' };
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() :
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&0x3|0x8)).toString(16);}));
+const nowISO = () => new Date().toISOString();
+
+const DB = {
+  read(k){ try{ return JSON.parse(localStorage.getItem(k)) || []; }catch(e){ return []; } },
+  write(k,v){ localStorage.setItem(k, JSON.stringify(v)); },
+  collections(){ return this.read(KEYS.col); },
+  sops(){ return this.read(KEYS.sop); },
+  logs(){ return this.read(KEYS.log); },
+  collection(id){ return this.collections().find(c=>c.id===id); },
+  sopFor(id){ return this.sops().find(s=>s.collectionId===id); },
+  logsFor(id){ return this.logs().filter(l=>l.collectionId===id).sort((a,b)=>b.date.localeCompare(a.date)); },
+  saveCollection(c){ const all=this.collections(); const i=all.findIndex(x=>x.id===c.id);
+    c.updatedAt=nowISO(); if(i>=0){ all[i]=c; } else { c.createdAt=nowISO(); all.push(c); } this.write(KEYS.col,all); return c; },
+  deleteCollection(id){ this.write(KEYS.col,this.collections().filter(c=>c.id!==id));
+    this.write(KEYS.sop,this.sops().filter(s=>s.collectionId!==id));
+    this.write(KEYS.log,this.logs().filter(l=>l.collectionId!==id)); },
+  saveSop(s){ const all=this.sops(); const i=all.findIndex(x=>x.id===s.id);
+    s.updatedAt=nowISO(); if(i>=0){ all[i]=s; } else { s.createdAt=nowISO(); all.push(s); } this.write(KEYS.sop,all); return s; },
+  saveLog(l){ const all=this.logs(); const i=all.findIndex(x=>x.id===l.id);
+    if(i>=0){ all[i]=l; } else { l.createdAt=nowISO(); all.push(l); } this.write(KEYS.log,all); return l; },
+  deleteLog(id){ this.write(KEYS.log,this.logs().filter(l=>l.id!==id)); },
+  exportAll(){ return { exportedAt:nowISO(), app:'BugBarn', version:1,
+    bugbarn_collections:this.collections(), bugbarn_sops:this.sops(), bugbarn_carelogs:this.logs() }; },
+  clearAll(){ [KEYS.col,KEYS.sop,KEYS.log,KEYS.seeded].forEach(k=>localStorage.removeItem(k)); }
+};
+
+/* ===== SECTION: SEED ===== */
+function dateOffset(days){ const d=new Date(); d.setDate(d.getDate()-days); d.setHours(8+Math.floor(Math.random()*8),Math.floor(Math.random()*59),0,0); return d.toISOString(); }
+function dayOnly(days){ const d=new Date(); d.setDate(d.getDate()-days); d.setHours(9,0,0,0); return d.toISOString(); }
+
+function seedData(){
+  const C = (o)=>Object.assign({ id:uuid(), dateAdded:dayOnly(o._added||200), colonySize:0, lifeStages:[],
+    enclosureType:'', enclosureSize:'', enclosureLabel:'', substrate:'', temperature:'', humidity:'', diet:'', feedingFrequency:'',
+    notes:'', photo:null, sopId:null, exhibit:{onExhibit:false,sentOut:null,dueBack:null,custodian:''}, careTasks:[],
+    createdAt:nowISO(), updatedAt:nowISO() }, o);
+
+  const specs = [
+    C({ commonName:'Madagascar Hissing Cockroach', scientificName:'Gromphadorhina portentosa', colonySize:300,
+      lifeStages:['adult','nymph'], enclosureType:'Terrarium', enclosureSize:'24×18×18 in', substrate:'Coco fiber + bark',
+      temperature:'75-82°F', humidity:'60-70%', diet:'Leafy greens, fruit, dog kibble', feedingFrequency:'Every 3 days',
+      notes:'Display colony. Males hiss when handled — great for outreach demos. Watch for mite buildup on substrate.', _added:540 }),
+    C({ commonName:'Emperor Scorpion', scientificName:'Pandinus imperator', colonySize:4,
+      lifeStages:['adult'], enclosureType:'Terrarium', enclosureSize:'18×12×12 in', substrate:'Coco fiber, 4 in deep',
+      temperature:'78-86°F', humidity:'70-80%', diet:'Crickets, dubia roaches', feedingFrequency:'Twice weekly',
+      notes:'Communal-tolerant. Provide cork bark hides. Mild venom but large pincers — use forceps.', _added:410 }),
+    C({ commonName:'Monarch Butterfly', scientificName:'Danaus plexippus', colonySize:120,
+      lifeStages:['egg','larva','pupa','adult'], enclosureType:'Mesh flight cage', enclosureSize:'24×24×36 in',
+      substrate:'N/A — potted milkweed', temperature:'72-80°F', humidity:'50-60%', diet:'Milkweed (larvae), nectar/sugar water (adults)',
+      feedingFrequency:'Daily', notes:'Rear-and-release education program. Sanitize cage between cohorts to prevent OE spore spread.', _added:60 }),
+    C({ commonName:'Vietnamese Stick Insect', scientificName:'Medauroidea extradentata', colonySize:60,
+      lifeStages:['egg','nymph','adult'], enclosureType:'Mesh cage', enclosureSize:'18×18×24 in', substrate:'Paper towel',
+      temperature:'70-78°F', humidity:'60-70%', diet:'Bramble, oak, rose leaves', feedingFrequency:'Every 2 days',
+      notes:'Parthenogenetic — all female. Mist daily. Eggs drop to floor; collect for incubation.', _added:150 }),
+    C({ commonName:'Chilean Rose Tarantula', scientificName:'Grammostola rosea', colonySize:1,
+      lifeStages:['adult'], enclosureType:'Terrarium', enclosureSize:'12×12×12 in', substrate:'Coco fiber, 3 in',
+      temperature:'70-78°F', humidity:'60-65%', diet:'Crickets, dubia roaches', feedingFrequency:'Weekly',
+      notes:'Docile but can flick urticating hairs. Keep water dish full. Long fasting is normal.', _added:300 }),
+    C({ commonName:'Giant African Millipede', scientificName:'Archispirostreptus gigas', colonySize:12,
+      lifeStages:['adult','juvenile'], enclosureType:'Terrarium', enclosureSize:'24×12×12 in', substrate:'Deep hardwood leaf litter + rotting wood',
+      temperature:'72-80°F', humidity:'70-80%', diet:'Decaying leaves, cucumber, squash', feedingFrequency:'Every 3 days',
+      notes:'Secretes benzoquinones if stressed — wash hands after handling. Excellent tactile outreach animal.', _added:220 }),
+    C({ commonName:'Desert Death-Feigning Beetle', scientificName:'Asbolus verrucosus', colonySize:25,
+      lifeStages:['adult'], enclosureType:'Deli cup colony', enclosureSize:'6×6×4 in cups', substrate:'Sand + sphagnum',
+      temperature:'72-85°F', humidity:'30-40%', diet:'Carrot, apple, dog kibble', feedingFrequency:'Twice weekly',
+      notes:'Play dead when disturbed — kid favorite. Keep dry; mold is the main risk.', _added:95 }),
+    C({ commonName:'Arizona Bark Scorpion', scientificName:'Centruroides sculpturatus', colonySize:8,
+      lifeStages:['adult','juvenile'], enclosureType:'Locked terrarium', enclosureSize:'18×12×12 in', substrate:'Sand/clay mix',
+      temperature:'78-88°F', humidity:'40-50%', diet:'Small crickets', feedingFrequency:'Weekly',
+      notes:'⚠ Medically significant venom. Staff-only handling with forceps + UV light. Double-locked, escape-proof lid mandatory.', _added:120 })
+  ];
+  DB.write(KEYS.col, specs);
+
+  // SOPs for first six species (leave beetle + millipede without, to show the generator)
+  const byName = n => specs.find(s=>s.commonName===n);
+  // enclosure labels, routine care tasks, and a couple of demo exhibit loans
+  const LABELS={ 'Madagascar Hissing Cockroach':'Main hall display', 'Emperor Scorpion':'Invert room · Rack B', 'Monarch Butterfly':'Rearing room', 'Vietnamese Stick Insect':'Invert room · Rack A', 'Chilean Rose Tarantula':'Invert room · Rack B', 'Giant African Millipede':'Touch-table holding', 'Desert Death-Feigning Beetle':'Touch-table holding', 'Arizona Bark Scorpion':'Venom case (locked)' };
+  const TASKS={
+    'Madagascar Hissing Cockroach':[['Feeding','feeding','weekly'],['Spot-clean & water','cleaning','weekly'],['Full census','census','monthly']],
+    'Emperor Scorpion':[['Feeding','feeding','weekly'],['Spot-clean & water','cleaning','weekly'],['UV headcount','census','weekly']],
+    'Monarch Butterfly':[['Fresh milkweed / nectar','feeding','daily'],['Frass clean & OE check','cleaning','daily'],['Life-stage census','census','daily']],
+    'Vietnamese Stick Insect':[['Fresh foliage','feeding','daily'],['Daily misting','observation','daily'],['Floor clean & egg sift','cleaning','weekly']],
+    'Chilean Rose Tarantula':[['Feeding','feeding','weekly'],['Water & spot-clean','cleaning','weekly'],['Weight & molt check','census','monthly']],
+    'Giant African Millipede':[['Feeding','feeding','weekly'],['Mist & spot-clean','cleaning','weekly'],['Census','census','monthly']],
+    'Desert Death-Feigning Beetle':[['Feeding','feeding','weekly'],['Dry-out & mold check','cleaning','weekly'],['Census','census','monthly']],
+    'Arizona Bark Scorpion':[['Feeding (feeding port)','feeding','weekly'],['Two-staff spot clean','cleaning','monthly'],['UV reconcile count','census','weekly']]
+  };
+  specs.forEach(c=>{ c.enclosureLabel=LABELS[c.commonName]||'';
+    c.careTasks=(TASKS[c.commonName]||[['Feeding','feeding',feedingToFreq(c.feedingFrequency)]]).map(([label,taskType,frequency])=>({id:uuid(),label,taskType,frequency})); });
+  const setEx=(name,sent,due,who)=>{ const c=byName(name); if(c) c.exhibit={onExhibit:true,sentOut:dayOnly(sent),dueBack:(due==null?null:dayOnly(due)),custodian:who}; };
+  setEx('Madagascar Hissing Cockroach',10,-4,'Lilly Hall lobby · Outreach');
+  setEx('Desert Death-Feigning Beetle',20,3,'Ms. Carter · Klondike Elementary');
+  const mkSop = (name, fields)=>{ const c=byName(name); const s=Object.assign({ id:uuid(), collectionId:c.id, speciesName:c.commonName,
+    biologyOverview:'', housingEnvironment:'', feedingProtocol:'', cleaningSchedule:'', populationCensus:'',
+    healthSafetyNotes:'', ppeRequired:'', biteStingRisk:'low', notes:'', createdAt:nowISO(), updatedAt:nowISO() }, fields);
+    c.sopId=s.id; return s; };
+  const sops = [
+    mkSop('Madagascar Hissing Cockroach',{ biteStingRisk:'low', ppeRequired:'gloves',
+      biologyOverview:'Large, wingless, ovoviviparous roach native to Madagascar leaf litter. Lifespan 2-5 years. Produces the characteristic hiss by forcing air through abdominal spiracles.',
+      housingEnvironment:'Ventilated terrarium, 75-82°F, 60-70% RH. 2 in coco fiber + bark hides. Smooth-walled, vaseline rim to prevent climbing escapes.',
+      feedingProtocol:'Leafy greens + fruit + dry dog kibble every 3 days. Shallow water crystals always available. Remove uneaten produce within 24h.',
+      cleaningSchedule:'Spot-clean mold/old food daily. Full substrate change every 6-8 weeks. Sift for nymphs before discarding substrate.',
+      populationCensus:'Visual estimate monthly by counting a marked quadrant ×4. Record adults vs nymphs separately.',
+      healthSafetyNotes:'No bite/sting risk. Wash hands after handling. Allergen potential from frass dust — work in ventilated area.',
+      notes:'Flagship outreach species. Suitable for unsupervised public handling under staff guidance.' }),
+    mkSop('Emperor Scorpion',{ biteStingRisk:'medium', ppeRequired:'gloves, long sleeves',
+      biologyOverview:'West African forest scorpion, communal, fluoresces under UV. Mild venom (LD50 high); pincers are the larger hazard. Lifespan 6-8 years.',
+      housingEnvironment:'78-86°F, 70-80% RH. 4 in moist coco fiber, multiple cork hides, shallow water dish. One hide per animal.',
+      feedingProtocol:'Appropriately sized crickets / dubia roaches twice weekly. Remove uneaten prey within 12h to avoid stressing molting animals.',
+      cleaningSchedule:'Spot-clean boluses and mold weekly. Full clean quarterly. Never disturb a freshly molted (soft) scorpion.',
+      populationCensus:'Headcount weekly with UV light after dark. Note any gravid females or recent molts.',
+      healthSafetyNotes:'Use 12-in forceps. Sting comparable to a bee — keep antihistamine in first-aid kit. Not for public handling.',
+      notes:'Staff demonstration animal only.' }),
+    mkSop('Monarch Butterfly',{ biteStingRisk:'low', ppeRequired:'gloves',
+      biologyOverview:'Migratory nymphalid. Complete metamorphosis ~28-32 days egg-to-adult at room temp. Larvae sequester cardenolides from milkweed.',
+      housingEnvironment:'Mesh flight cage with potted live milkweed, 72-80°F, 50-60% RH, 14h light. Avoid crowding (>1 larva/leaf cluster).',
+      feedingProtocol:'Larvae: fresh milkweed daily, replace wilted leaves. Adults: 10% sugar water on sponge / fresh nectar flowers daily.',
+      cleaningSchedule:'Remove frass and shed skins daily. Bleach-sanitize cage (10% solution, rinse well) between rearing cohorts to control OE.',
+      populationCensus:'Count by life stage daily during active rearing; log eclosion and release numbers.',
+      healthSafetyNotes:'No risk to handlers. Handle adults by wing base only, sparingly. Quarantine/cull OE-positive individuals.',
+      notes:'Tag-and-release with Monarch Watch each fall.' }),
+    mkSop('Vietnamese Stick Insect',{ biteStingRisk:'low', ppeRequired:'none required',
+      biologyOverview:'Parthenogenetic phasmid; colonies are all-female. Eggs hatch in 3-6 months. Adults reach ~10 cm, masters of crypsis.',
+      housingEnvironment:'Tall mesh cage (height for molting), 70-78°F, 60-70% RH. Mist daily. Fresh bramble/oak/rose in water picks.',
+      feedingProtocol:'Replace cut foliage every 2 days or when wilted. Ensure stems are in water but cage floor stays dry.',
+      cleaningSchedule:'Clear frass from floor every 2-3 days. Sift floor debris for dropped eggs before disposal. Full clean monthly.',
+      populationCensus:'Estimate nymphs + adults monthly; tally collected eggs into incubation cups.',
+      healthSafetyNotes:'Harmless. Very fragile — never grasp legs (autotomy). Coax onto hand instead.',
+      notes:'Great first hands-on insect for young visitors.' }),
+    mkSop('Chilean Rose Tarantula',{ biteStingRisk:'medium', ppeRequired:'gloves, eye protection',
+      biologyOverview:'New World terrestrial theraphosid. Females live 15-20 yrs. Mild venom; primary hazard is urticating setae kicked from the abdomen.',
+      housingEnvironment:'70-78°F, 60-65% RH. 3 in dry coco fiber, one cork hide, full water dish. Floor space > height (avoid fall injury).',
+      feedingProtocol:'1-2 appropriately sized crickets weekly. Long voluntary fasts are normal — never force feed. Remove uneaten prey in 24h.',
+      cleaningSchedule:'Remove boluses and refill water weekly. Full substrate change yearly or post-molt. Do not disturb during premolt.',
+      populationCensus:'Single specimen — log weight monthly and molt dates.',
+      healthSafetyNotes:'Eye protection against flicked hairs. Bite ~ bee sting. Staff handling only, low and over soft surface.',
+      notes:'Premolt animals refuse food and seal the hide — leave undisturbed.' }),
+    mkSop('Arizona Bark Scorpion',{ biteStingRisk:'high', ppeRequired:'gloves, eye protection, forceps',
+      biologyOverview:'Small climbing buthid, the most venomous scorpion in North America. Strongly fluoresces. Negative-buoyancy climber — escapes upward.',
+      housingEnvironment:'78-88°F, 40-50% RH. Sand/clay substrate, vertical bark for climbing. DOUBLE-LOCKED escape-proof lid, smooth high walls.',
+      feedingProtocol:'Small crickets weekly via forceps through a feeding port only. Never open the main lid for routine feeding.',
+      cleaningSchedule:'Minimal-disturbance spot clean monthly, two-staff rule, UV light to locate all animals first. Count before and after.',
+      populationCensus:'Full UV headcount before any enclosure opening; reconcile against logged total every time.',
+      healthSafetyNotes:'MEDICALLY SIGNIFICANT. Antivenom protocol posted; nearest ER on file. Two-person rule, forceps only, no public access.',
+      notes:'Venom-awareness display behind locked glass. Escapee protocol: clear room, UV sweep, report immediately.' })
+  ];
+  DB.write(KEYS.sop, sops);
+  DB.write(KEYS.col, specs); // re-save with sopId links
+
+  // Care logs — generate a believable history; tune last-fed to drive due/overdue
+  const keepers=['M. Reyes','J. Okafor','S. Patel','T. Nguyen','A. Brooks'];
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const logs=[];
+  const addLog=(c,daysAgo,task,freq,note,count)=>logs.push({ id:uuid(), collectionId:c.id, date:dateOffset(daysAgo),
+    frequency:freq, taskType:task, performedBy:pick(keepers), notes:note||'',
+    colonyCountRecorded:(count!==undefined?count:null), createdAt:nowISO() });
+
+  // Per-species recent feeding offsets (days ago of most recent feed) chosen to create ~mix of due/overdue
+  const recent = {
+    'Madagascar Hissing Cockroach':3, 'Emperor Scorpion':0, 'Monarch Butterfly':0,
+    'Vietnamese Stick Insect':2, 'Chilean Rose Tarantula':7, 'Giant African Millipede':5,
+    'Desert Death-Feigning Beetle':3, 'Arizona Bark Scorpion':9 /* overdue */
+  };
+  specs.forEach(c=>{
+    const r = recent[c.commonName] ?? 2;
+    // history of feedings going back ~24 days
+    for(let d=r; d<=24; d+= (c.feedingFrequency.match(/daily/i)?2:3)){
+      addLog(c,d,'feeding','weekly',d===r?'':'', undefined);
+    }
+    // a census + cleaning sprinkled in
+    addLog(c, r+1, 'census', 'monthly', 'Routine count', c.colonySize + (Math.floor(Math.random()*7)-3));
+    addLog(c, Math.min(r+4,20), 'cleaning', 'weekly', 'Spot clean + water', undefined);
+    addLog(c, Math.min(r+9,22), 'observation', 'weekly', pick(['Active, feeding well','Normal behaviour','Molt observed','All accounted for']), undefined);
+  });
+  // a couple of explicit recent highlight entries
+  addLog(byName('Emperor Scorpion'),0,'feeding','weekly','2 crickets accepted',undefined);
+  addLog(byName('Madagascar Hissing Cockroach'),0,'census','monthly','Quadrant estimate',300);
+  addLog(byName('Monarch Butterfly'),0,'cleaning','daily','Frass cleared, OE check clear',undefined);
+
+  DB.write(KEYS.log, logs);
+  localStorage.setItem(KEYS.seeded,'1');
+}
+
+/* ===== SECTION: HELPERS ===== */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; }
+
+const MS_DAY=86400000;
+function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function daysBetween(a,b){ return Math.round((startOfDay(a)-startOfDay(b))/MS_DAY); }
+function fmtDate(iso,opts){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('en-US',opts||{month:'short',day:'numeric',year:'numeric'}); }
+function fmtTime(iso){ return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}).replace(' ',''); }
+function relTime(iso){
+  const d=daysBetween(new Date(),iso);
+  if(d===0) return 'today · '+fmtTime(iso);
+  if(d===1) return 'yesterday · '+fmtTime(iso);
+  if(d<7) return d+' days ago';
+  return fmtDate(iso,{month:'short',day:'numeric'});
+}
+function intervalDays(freqStr){
+  const s=(freqStr||'').toLowerCase();
+  if(/daily|every day/.test(s)) return 1;
+  if(/every other|every 2|other day/.test(s)) return 2;
+  if(/every 3/.test(s)) return 3;
+  if(/twice.*week|2x.*week/.test(s)) return 4;
+  if(/bi.?week|every 2 week|fortnight/.test(s)) return 14;
+  if(/week/.test(s)) return 7;
+  if(/month/.test(s)) return 30;
+  return 7;
+}
+const FREQ_DAYS={daily:1,weekly:7,monthly:30};
+function taskFreqDays(f){ return FREQ_DAYS[f]!=null?FREQ_DAYS[f]:intervalDays(f); }
+function feedingToFreq(str){ const d=intervalDays(str); return d<=2?'daily':d<=10?'weekly':'monthly'; }
+function lastCareDate(colId){ const ls=DB.logsFor(colId); return ls.length?ls[0].date:null; }
+function lastFeedDate(colId){ const ls=DB.logsFor(colId).filter(l=>l.taskType==='feeding'); return ls.length?ls[0].date:null; }
+function lastLogOfType(colId,type){ const ls=DB.logsFor(colId).filter(l=>l.taskType===type); return ls.length?ls[0].date:null; }
+function defaultCareTasks(c){ return [ { id:'_feed', label:'Feeding', taskType:'feeding', frequency:feedingToFreq(c.feedingFrequency) } ]; }
+function getCareTasks(c){ return (c.careTasks&&c.careTasks.length)?c.careTasks:defaultCareTasks(c); }
+// per recurring task: when is it next due?
+function taskStatus(colId, task){
+  const iv=taskFreqDays(task.frequency);
+  const last=lastLogOfType(colId, task.taskType);
+  if(!last) return { status:'overdue', daysSince:Infinity, nextDays:-Infinity, iv, last:null };
+  const since=daysBetween(new Date(),last);
+  const nextDays=iv-since;
+  const status = nextDays<0?'overdue':(nextDays===0?'due':'ok');
+  return { status, daysSince:since, nextDays, iv, last };
+}
+// status: 'overdue' | 'due' (today) | 'ok' — aggregated across a colony's routine tasks
+function careStatus(c){
+  const tasks=getCareTasks(c);
+  let worst=null, due=0, overdue=0;
+  tasks.forEach(t=>{ const ts=taskStatus(c.id,t);
+    if(ts.status==='overdue') overdue++; else if(ts.status==='due') due++;
+    if(!worst || ts.nextDays<worst.nextDays) worst=ts; });
+  const status = overdue>0?'overdue':(due>0?'due':'ok');
+  return { status, daysSince:worst?worst.daysSince:Infinity, nextDays:worst?worst.nextDays:Infinity, dueCount:due, overdueCount:overdue, tasks };
+}
+// exhibit / check-out helpers
+function exhibitOf(c){ return c.exhibit||{onExhibit:false}; }
+function exhibitReturnOverdue(c){ const e=exhibitOf(c); return !!(e.onExhibit && e.dueBack && daysBetween(new Date(), e.dueBack)>0); }
+function riskOf(colId){ const s=DB.sopFor(colId); return s?s.biteStingRisk:null; }
+function riskBadge(r){ if(!r) return '<span class="risk none">no SOP</span>';
+  return `<span class="risk ${r}">${r==='medium'?'med':r} risk</span>`; }
+const TASK_COLORS={ feeding:'#5a8a32', cleaning:'#4a86b0', census:'#C8860A', observation:'#8a7a5e', other:'#9a8a6c' };
+function dotColorForLog(l){ return TASK_COLORS[l.taskType]||TASK_COLORS.other; }
+function stats(){
+  const cols=DB.collections();
+  const totalInd=cols.reduce((s,c)=>s+(Number(c.colonySize)||0),0);
+  let due=0, overdue=0, stale=[], onExhibit=0, exhibitOverdue=[];
+  cols.forEach(c=>{ const st=careStatus(c);
+    if(st.status==='overdue') overdue++; else if(st.status==='due') due++;
+    const last=lastCareDate(c.id);
+    if(!last || daysBetween(new Date(),last)>=7) stale.push(c);
+    if(exhibitOf(c).onExhibit){ onExhibit++; if(exhibitReturnOverdue(c)) exhibitOverdue.push(c); }
+  });
+  return { species:cols.length, individuals:totalInd, due, overdue, stale, onExhibit, exhibitOverdue };
+}
+function toast(msg,kind){
+  const t=el(`<div class="toast ${kind==='err'?'err':''}">${kind==='err'
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'}
+    <span>${esc(msg)}</span></div>`);
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),240); }, 2600);
+}
+/* ===== SECTION: VIEWS ===== */
+const ICON = {
+  dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  bug:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M12 6V3M9 4l-2-1M15 4l2-1M8 10H4M8 14H3.5M8 18l-3 2M16 10h4M16 14h4.5M16 18l3 2"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>',
+  sop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6M9 9h1"/></svg>',
+  set:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="18" r="2"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>',
+  print:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>',
+  dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 8l5-5 5 5M12 3v12"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  leaf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-5 4-9 16-9 0 9-4 13-9 13z"/><path d="M4 20c3-4 6-6 10-7"/></svg>',
+  chL:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  chR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
+  img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>',
+  box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
+};
+const NAV=[['dashboard','Dashboard',ICON.dash],['collections','Collections',ICON.bug],['schedule','Care Schedule',ICON.cal],['sops','SOP Library',ICON.sop],['settings','Settings',ICON.set]];
+
+const state = { route:'dashboard', id:null, search:'', filter:'all', schedView:'calendar', calMonth:null, weekOffset:0, logFilter:'all' };
+
+function go(route, id){ state.route=route; state.id=id||null; window.scrollTo(0,0); render(); }
+
+function buildNav(){
+  const nav=$('#nav'); nav.innerHTML='';
+  const counts={ collections:DB.collections().length, sops:DB.sops().length };
+  NAV.forEach(([key,label,icon])=>{
+    const on = (state.route===key) || (state.route==='detail'&&key==='collections') || (state.route==='sop'&&key==='sops');
+    const b=el(`<button class="${on?'on':''}">${icon}<span>${label}</span>${counts[key]!=null?`<span class="count">${counts[key]}</span>`:''}</button>`);
+    b.onclick=()=>go(key);
+    nav.appendChild(b);
+  });
+  $('#seedNote').classList.toggle('hide', localStorage.getItem(KEYS.seeded)!=='1');
+}
+
+/* ---------- DASHBOARD ---------- */
+function renderDashboard(){
+  const s=stats();
+  const cols=DB.collections();
+  const attention=cols.map(c=>({c,st:careStatus(c)}))
+    .filter(o=>o.st.status!=='ok')
+    .sort((a,b)=>a.st.nextDays-b.st.nextDays).slice(0,4);
+  const logs=DB.logs().slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+  const verb={feeding:'Fed',cleaning:'Cleaned',census:'Census',observation:'Observed',other:'Logged'};
+  const today=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  const alerts=[];
+  if(s.exhibitOverdue.length) alerts.push(`<div class="alert">${ICON.alert}<div class="at"><b>${s.exhibitOverdue.length} exhibit ${s.exhibitOverdue.length===1?'loan is':'loans are'} past due for return.</b> <span class="names">${s.exhibitOverdue.map(c=>esc(c.commonName)+(exhibitOf(c).custodian?(' · '+esc(exhibitOf(c).custodian)):'')).join(' · ')}</span></div></div>`);
+  if(s.stale.length) alerts.push(`<div class="alert">${ICON.alert}<div class="at"><b>${s.stale.length} ${s.stale.length===1?'species has':'species have'} no care logged in 7+ days.</b> <span class="names"> ${s.stale.map(c=>esc(c.commonName)).join(' · ')}</span></div></div>`);
+  const alertHtml = alerts.join('');
+
+  $('#view').innerHTML = `
+    <div class="phead">
+      <div>
+        <p class="kicker">Daily Logbook</p>
+        <h1 class="ptitle">Good ${greeting()}, keeper.</h1>
+        <p class="psub">${today} · ${cols.length} species under care${s.onExhibit?` · ${s.onExhibit} on exhibit`:''}</p>
+      </div>
+      <button class="btn btn-primary" id="qadd">${ICON.plus} Add New Species</button>
+    </div>
+    ${alertHtml}
+    <div class="stats">
+      <div class="stat"><span class="pin"></span><div class="n">${s.species}</div><div class="l">Species housed</div></div>
+      <div class="stat"><span class="pin"></span><div class="n">${s.individuals.toLocaleString()}</div><div class="l">Individuals across colonies</div></div>
+      <div class="stat amber"><span class="pin"></span><div class="n">${s.due}</div><div class="l">Care tasks due today</div></div>
+      <div class="stat ${s.overdue?'warn':''}"><span class="pin"></span><div class="n">${s.overdue}</div><div class="l">Overdue ${s.overdue?'· check soon':''}</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-h"><div class="panel-t">Needs attention</div><button class="link" id="toSchedule">Care schedule →</button></div>
+        ${attention.length? attention.map(o=>speciesRow(o.c,o.st)).join('') :
+          `<div style="padding:18px 4px;color:var(--ink2);font-size:14px;">🌿 All colonies are on schedule. Nicely done.</div>`}
+      </div>
+      <div class="panel">
+        <div class="panel-h"><div class="panel-t">Recent activity</div></div>
+        <div class="feed">
+          ${logs.length? logs.map(l=>{ const c=DB.collection(l.collectionId); if(!c) return '';
+            return `<div class="fitem"><span class="fdot" style="background:${dotColorForLog(l)}"></span>
+              <div><div class="ft"><b>${verb[l.taskType]||'Logged'}</b> ${esc(c.commonName)}${l.notes?` — ${esc(l.notes)}`:''}</div>
+              <div class="fw">${relTime(l.date)} · ${esc(l.performedBy||'—')}</div></div></div>`; }).join('')
+            : `<div class="muted" style="padding:10px 0;">No activity logged yet.</div>`}
+        </div>
+      </div>
+    </div>`;
+  $('#qadd').onclick=()=>openEntryForm();
+  $('#toSchedule').onclick=()=>go('schedule');
+}
+function greeting(){ const h=new Date().getHours(); return h<12?'morning':h<17?'afternoon':'evening'; }
+
+function speciesRow(c,st){
+  const r=riskOf(c.id);
+  const flag = st && st.status==='overdue' ? `<span class="chip" style="background:var(--high-bg);color:var(--high-fg)">${st.daysSince===Infinity?'never fed':st.daysSince+'d overdue'}</span>`
+    : st && st.status==='due' ? `<span class="chip" style="background:var(--med-bg);color:var(--med-fg)">due today</span>` : '';
+  return `<div class="srow" data-id="${c.id}">
+    ${photoThumb(c,'srow-thumb')}
+    <div style="flex:1;min-width:0">
+      <div class="srow-name">${esc(c.commonName)}</div>
+      <div class="sci">${esc(c.scientificName)}</div>
+      <div class="metarow"><span class="chip">colony · ${c.colonySize||0}</span><span class="chip">${esc(c.enclosureType||'—')}</span>${exhibitOf(c).onExhibit?`<span class="chip" style="background:var(--med-bg);color:var(--med-fg)">on exhibit</span>`:''}${riskBadge(r)}${flag}</div>
+    </div></div>`;
+}
+function photoThumb(c,cls){
+  return c.photo ? `<img class="${cls}" src="${c.photo}" alt="">`
+    : `<div class="${cls}" style="background-color:#ddd3bd;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.05) 0 7px,transparent 7px 14px)"></div>`;
+}
+
+/* ---------- COLLECTIONS LIST ---------- */
+function renderCollections(){
+  const all=DB.collections();
+  const stagesAll=['egg','larva','nymph','pupa','juvenile','adult'];
+  const filtered=all.filter(c=>{
+    const q=state.search.trim().toLowerCase();
+    const matchQ=!q || c.commonName.toLowerCase().includes(q) || c.scientificName.toLowerCase().includes(q);
+    const matchF=state.filter==='all' || (c.lifeStages||[]).includes(state.filter);
+    return matchQ && matchF;
+  }).sort((a,b)=>a.commonName.localeCompare(b.commonName));
+
+  $('#view').innerHTML=`
+    <div class="phead">
+      <div><p class="kicker">The Living Collection</p><h1 class="ptitle">All Species</h1>
+      <p class="psub">${all.length} species · ${all.reduce((s,c)=>s+(+c.colonySize||0),0).toLocaleString()} individuals</p></div>
+      <button class="btn btn-primary" id="addSpecies">${ICON.plus} Add New Species</button>
+    </div>
+    <div class="toolbar">
+      <div class="search">${ICON.search}<input id="searchInput" placeholder="Search common or scientific name…" value="${esc(state.search)}"></div>
+      <div class="filterpills" id="filters">
+        <button class="fpill ${state.filter==='all'?'on':''}" data-f="all">All stages</button>
+        ${stagesAll.map(s=>`<button class="fpill ${state.filter===s?'on':''}" data-f="${s}">${s}</button>`).join('')}
+      </div>
+    </div>
+    ${filtered.length? `<div class="cardgrid">${filtered.map(speciesCard).join('')}</div>`
+      : `<div class="empty">${ICON.bug}<h3>${all.length?'No matches':'No species yet'}</h3>
+         <p class="muted">${all.length?'Try a different search or filter.':'Add your first living collection entry to get started.'}</p></div>`}`;
+
+  $('#addSpecies').onclick=()=>openEntryForm();
+  const si=$('#searchInput');
+  si.oninput=()=>{ state.search=si.value; const grid=$('#view'); // re-render list region only
+    renderCollections(); $('#searchInput').focus(); const v=$('#searchInput'); v.setSelectionRange(v.value.length,v.value.length); };
+  $$('#filters .fpill').forEach(b=>b.onclick=()=>{ state.filter=b.dataset.f; renderCollections(); });
+  $$('.scard').forEach(card=>card.onclick=()=>go('detail',card.dataset.id));
+}
+function speciesCard(c){
+  const r=riskOf(c.id), st=careStatus(c);
+  const onEx=exhibitOf(c).onExhibit;
+  const photo = c.photo ? `<img src="${c.photo}" alt="">`
+    : `<div class="ph"><span>drop specimen photo</span></div>`;
+  return `<div class="scard" data-id="${c.id}">
+    <div class="photo">${photo}<div class="riskbadge">${riskBadge(r)}</div>${onEx?'<div class="exhibitribbon">On exhibit</div>':''}</div>
+    <div class="bd">
+      <h4>${esc(c.commonName)}</h4>
+      <div class="sci">${esc(c.scientificName)}</div>
+      ${c.enclosureLabel?`<div class="enclabel">${esc(c.enclosureLabel)}</div>`:''}
+      <div class="cardmeta"><span class="chip">colony · ${c.colonySize||0}</span><span class="chip">${esc(c.enclosureType||'—')}</span>
+      ${st.status==='overdue'?'<span class="chip" style="background:var(--high-bg);color:var(--high-fg)">overdue</span>':st.status==='due'?'<span class="chip" style="background:var(--med-bg);color:var(--med-fg)">due today</span>':''}</div>
+      <div class="added">added ${fmtDate(c.dateAdded)}</div>
+    </div></div>`;
+}
+
+function locationCard(c){
+  const e=exhibitOf(c);
+  if(e.onExhibit){
+    const over=exhibitReturnOverdue(c);
+    const dueTxt = e.dueBack ? (over?('return '+Math.abs(daysBetween(new Date(),e.dueBack))+'d overdue'):('due back '+fmtDate(e.dueBack))) : 'no return date';
+    return `<div class="loccard exhibit ${over?'over':''}">
+      <div class="loctop"><span class="locpill exhibit">${ICON.box} On exhibit</span>${over?'<span class="risk high">overdue</span>':''}</div>
+      ${e.custodian?`<div class="locrow"><span class="lk">With</span><span class="lv">${esc(e.custodian)}</span></div>`:''}
+      <div class="locrow"><span class="lk">Sent</span><span class="lv">${e.sentOut?fmtDate(e.sentOut):'—'}</span></div>
+      <div class="locrow"><span class="lk">Return</span><span class="lv ${over?'over':''}">${dueTxt}</span></div>
+      <button class="btn btn-ghost btn-sm" id="exhibitBtn" style="margin-top:11px;width:100%;justify-content:center">${ICON.home} Return to barn</button>
+    </div>`;
+  }
+  return `<div class="loccard">
+    <div class="loctop"><span class="locpill barn">${ICON.home} In the Bug Barn</span></div>
+    <button class="btn btn-ghost btn-sm" id="exhibitBtn" style="margin-top:11px;width:100%;justify-content:center">${ICON.box} Check out to exhibit</button>
+  </div>`;
+}
+function routineCard(c){
+  const tasks=getCareTasks(c);
+  if(!tasks.length) return `<div class="muted" style="padding:6px 2px">No routine tasks defined yet.</div>`;
+  return `<div class="panel" style="padding:6px 16px"><table class="tbl"><thead><tr><th>Task</th><th>Type</th><th>Every</th><th>Last done</th><th>Status</th></tr></thead><tbody>
+    ${tasks.map(t=>{ const ts=taskStatus(c.id,t);
+      const status = ts.status==='overdue'?`<span class="risk high">${ts.daysSince===Infinity?'never':Math.abs(ts.nextDays)+'d overdue'}</span>`
+        : ts.status==='due'?'<span class="risk med">due today</span>':`<span class="risk low">in ${ts.nextDays}d</span>`;
+      return `<tr><td><b>${esc(t.label)}</b></td><td><span class="tasktag tt-${t.taskType}">${t.taskType}</span></td>
+        <td style="text-transform:capitalize">${esc(t.frequency)}</td>
+        <td style="white-space:nowrap">${ts.last?fmtDate(ts.last,{month:'short',day:'numeric'}):'—'}</td><td>${status}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+
+/* ---------- DETAIL ---------- */
+function renderDetail(){
+  const c=DB.collection(state.id);
+  if(!c){ go('collections'); return; }
+  const sop=DB.sopFor(c.id);
+  const logs=DB.logsFor(c.id).filter(l=>state.logFilter==='all'||l.frequency===state.logFilter);
+  const allLogs=DB.logsFor(c.id);
+  const st=careStatus(c);
+  const verb={feeding:'Feeding',cleaning:'Cleaning',census:'Census',observation:'Observation',other:'Other'};
+  const spec=(k,v,full)=>`<div class="sp ${full?'full':''}"><div class="k">${k}</div><div class="v">${v||'—'}</div></div>`;
+
+  $('#view').innerHTML=`
+    <button class="backlink" id="back">${ICON.back} All species</button>
+    <div class="phead" style="margin-bottom:18px">
+      <div><p class="kicker">${esc(c.enclosureType||'Collection')}${c.enclosureLabel?' · '+esc(c.enclosureLabel):''} · added ${fmtDate(c.dateAdded)}</p>
+      <h1 class="ptitle">${esc(c.commonName)}</h1>
+      <p class="sci" style="font-size:16px;margin-top:4px">${esc(c.scientificName)}</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" id="dupBtn">${ICON.copy} Duplicate</button>
+        <button class="btn btn-ghost btn-sm" id="editBtn">${ICON.edit} Edit</button>
+        <button class="btn btn-danger btn-sm" id="delBtn">${ICON.trash} Delete</button>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div>
+        <div class="detail-photo"><div class="imgwrap">${c.photo?`<img src="${c.photo}" alt="">`:
+          `<div class="ph" style="position:absolute;inset:0;display:flex;align-items:flex-end;background-color:#ddd3bd;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.05) 0 8px,transparent 8px 16px)"><span style="font-family:var(--mono);font-size:11px;color:rgba(59,32,7,.5);padding:9px 11px">no photo — add via Edit</span></div>`}</div></div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${riskBadge(riskOf(c.id))}
+          ${st.status==='overdue'?'<span class="risk high">care overdue</span>':st.status==='due'?'<span class="risk med">due today</span>':'<span class="risk low">on schedule</span>'}
+        </div>
+        ${locationCard(c)}
+        <button class="btn btn-green btn-sm" id="logBtn" style="margin-top:14px;width:100%;justify-content:center">${ICON.plus} Log Care Task</button>
+      </div>
+      <div>
+        <div class="specs">
+          ${spec('Colony size', (c.colonySize||0)+' individuals')}
+          ${spec('Life stages present', (c.lifeStages&&c.lifeStages.length)?`<div class="stages">${c.lifeStages.map(s=>`<span class="stagepill">${esc(s)}</span>`).join('')}</div>`:'—')}
+          ${spec('Enclosure', esc(c.enclosureType))}
+          ${spec('Enclosure size', esc(c.enclosureSize))}
+          ${spec('Substrate', esc(c.substrate))}
+          ${spec('Temperature', esc(c.temperature))}
+          ${spec('Humidity', esc(c.humidity))}
+          ${spec('Diet', esc(c.diet))}
+          ${spec('Feeding frequency', esc(c.feedingFrequency))}
+          ${c.notes?spec('Notes', esc(c.notes), true):''}
+        </div>
+
+        <div class="sectiontitle" style="display:flex;justify-content:space-between;align-items:center">
+          <span style="display:flex;align-items:center;gap:9px"><span style="width:6px;height:18px;background:var(--amber);border-radius:2px;display:block"></span>Routine care tasks</span>
+          <button class="btn btn-ghost btn-sm" id="manageTasks">${ICON.edit} Manage tasks</button>
+        </div>
+        ${routineCard(c)}
+
+        <div class="sectiontitle">Standard Operating Procedure</div>
+        ${sop? `<div class="sopbox">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+              <div style="display:flex;gap:8px;align-items:center"><span class="risk ${sop.biteStingRisk}">${sop.biteStingRisk==='medium'?'med':sop.biteStingRisk} bite/sting risk</span>
+              ${sop.ppeRequired?`<span class="chip">PPE: ${esc(sop.ppeRequired)}</span>`:''}</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-ghost btn-sm" id="printSop">${ICON.print} Print / PDF</button>
+                <button class="btn btn-green btn-sm" id="editSop">${ICON.edit} View / Edit SOP</button>
+              </div>
+            </div>
+            ${[['Biology overview','biologyOverview'],['Housing & environment','housingEnvironment'],['Feeding protocol','feedingProtocol'],['Cleaning schedule','cleaningSchedule'],['Population census','populationCensus'],['Health & safety','healthSafetyNotes']]
+              .filter(([_,k])=>sop[k]).map(([label,k])=>`<div class="sop-sec"><div class="sk">${label}</div><div class="sv">${esc(sop[k])}</div></div>`).join('')}
+          </div>`
+        : `<div class="sopbox empty-sop">
+            <p class="muted" style="margin:0 0 12px">No care SOP exists for this species yet. Generate one pre-filled from this entry.</p>
+            <button class="btn btn-primary btn-sm" id="genSop">${ICON.sop} Generate SOP from Template</button></div>`}
+
+        <div class="sectiontitle" style="justify-content:space-between;display:flex">
+          <span style="display:flex;align-items:center;gap:9px"><span style="width:6px;height:18px;background:var(--amber);border-radius:2px;display:block"></span>Care Log</span>
+        </div>
+        <div class="toolbar" style="margin-bottom:12px">
+          <div class="filterpills" id="logFilters">
+            ${['all','daily','weekly','monthly'].map(f=>`<button class="fpill ${state.logFilter===f?'on':''}" data-f="${f}">${f==='all'?'All':f}</button>`).join('')}
+          </div>
+          <div style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink3)">${allLogs.length} total entries</div>
+        </div>
+        ${logs.length? `<div class="panel" style="padding:6px 14px"><table class="tbl"><thead><tr>
+            <th>Date</th><th>Task</th><th>Freq</th><th>By</th><th>Count</th><th>Notes</th><th></th></tr></thead><tbody>
+            ${logs.map(l=>`<tr>
+              <td style="white-space:nowrap">${fmtDate(l.date,{month:'short',day:'numeric'})}<div style="font-family:var(--mono);font-size:10px;color:var(--ink3)">${fmtTime(l.date)}</div></td>
+              <td><span class="tasktag tt-${l.taskType}">${l.taskType}</span></td>
+              <td style="text-transform:capitalize">${esc(l.frequency)}</td>
+              <td>${esc(l.performedBy||'—')}</td>
+              <td>${l.colonyCountRecorded!=null&&l.colonyCountRecorded!==''?l.colonyCountRecorded:'—'}</td>
+              <td style="max-width:220px">${esc(l.notes||'—')}</td>
+              <td><button class="btn-icon" data-del="${l.id}" title="Delete entry">${ICON.trash}</button></td></tr>`).join('')}
+          </tbody></table></div>`
+        : `<div class="muted" style="padding:14px 2px">No care tasks logged${state.logFilter!=='all'?' for this frequency':''} yet.</div>`}
+      </div>
+    </div>`;
+
+  $('#back').onclick=()=>go('collections');
+  $('#editBtn').onclick=()=>openEntryForm(c);
+  $('#dupBtn').onclick=()=>duplicateEntry(c);
+  const mt=$('#manageTasks'); if(mt) mt.onclick=()=>openCareTasksEditor(c.id);
+  const exb=$('#exhibitBtn'); if(exb) exb.onclick=()=>openExhibitForm(c.id);
+  $('#delBtn').onclick=()=>confirmDialog('Delete '+c.commonName+'?','This permanently removes the species, its SOP, and all '+allLogs.length+' care log entries. This cannot be undone.','Delete',()=>{ DB.deleteCollection(c.id); toast(c.commonName+' deleted'); go('collections'); });
+  $('#logBtn').onclick=()=>openLogForm(c.id);
+  const gs=$('#genSop'); if(gs) gs.onclick=()=>openSopEditor(c.id);
+  const es=$('#editSop'); if(es) es.onclick=()=>openSopEditor(c.id);
+  const ps=$('#printSop'); if(ps) ps.onclick=()=>printSop(c.id);
+  $$('#logFilters .fpill').forEach(b=>b.onclick=()=>{ state.logFilter=b.dataset.f; renderDetail(); });
+  $$('[data-del]').forEach(b=>b.onclick=()=>confirmDialog('Delete this log entry?','This care log line will be removed.','Delete',()=>{ DB.deleteLog(b.dataset.del); toast('Log entry deleted'); renderDetail(); }));
+}
+/* ===== SECTION: FORMS ===== */
+let _modalKeyHandler=null;
+function openModal(innerHtml, opts={}){
+  closeModal();
+  const scrim=el(`<div class="scrim"><div class="modal ${opts.wide?'wide':''} ${opts.cls||''}">${innerHtml}</div></div>`);
+  $('#modalRoot').appendChild(scrim);
+  scrim.addEventListener('mousedown',e=>{ if(e.target===scrim && !opts.noBackdropClose) closeModal(); });
+  _modalKeyHandler=e=>{ if(e.key==='Escape') closeModal(); };
+  document.addEventListener('keydown',_modalKeyHandler);
+  const x=scrim.querySelector('[data-close]'); if(x) x.onclick=()=>closeModal();
+  return scrim;
+}
+function closeModal(){ const m=$('#modalRoot'); m.innerHTML=''; if(_modalKeyHandler){ document.removeEventListener('keydown',_modalKeyHandler); _modalKeyHandler=null; } }
+
+function modalShell({kicker,title,body,footer,wide,cls}){
+  return `<div class="modal-h"><div><p class="kicker">${kicker||''}</p><h2>${title}</h2></div>
+    <button class="btn-icon" data-close>${ICON.x}</button></div>
+    <div class="modal-b">${body}</div>${footer?`<div class="modal-f">${footer}</div>`:''}`;
+}
+
+// downscale an image File/blob to a data URL
+function fileToDataURL(file, maxPx=900, quality=0.82){
+  return new Promise((res,rej)=>{
+    if(!file.type.startsWith('image/')){ rej(new Error('Not an image')); return; }
+    const reader=new FileReader();
+    reader.onload=()=>{ const img=new Image(); img.onload=()=>{
+      let {width:w,height:h}=img; const scale=Math.min(1,maxPx/Math.max(w,h));
+      w=Math.round(w*scale); h=Math.round(h*scale);
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      res(cv.toDataURL('image/jpeg',quality)); };
+      img.onerror=rej; img.src=reader.result; };
+    reader.onerror=rej; reader.readAsDataURL(file);
+  });
+}
+
+const ENCLOSURES=['Terrarium','Deli cup','Deli cup colony','Mesh cage','Mesh flight cage','Glass aquarium','Locked terrarium','Custom'];
+const STAGES=['egg','larva','nymph','pupa','juvenile','adult'];
+
+function openEntryForm(existing){
+  const c=existing||{};
+  let photoData = c.photo||null;
+  const f=(k)=>esc(c[k]||'');
+  const body=`
+    <form id="entryForm" novalidate>
+    <div class="formgrid">
+      <div class="dropzone" id="dropzone">
+        <div class="dzprev" id="dzprev">${photoData?`<img src="${photoData}">`:ICON.img}</div>
+        <div class="dztext"><b>Specimen photo</b><br>Drag &amp; drop an image here, or browse. Stored with the entry &amp; in your backup.
+          <div class="dzbtns"><button type="button" class="btn btn-ghost btn-sm" id="browseBtn">${ICON.up} Choose file</button>
+          <button type="button" class="btn btn-ghost btn-sm ${photoData?'':'hide'}" id="removePhoto">Remove</button></div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" class="hide">
+      </div>
+      <div class="field full"><label>Common name <span class="req">*</span></label>
+        <input name="commonName" value="${f('commonName')}" placeholder="e.g. Madagascar Hissing Cockroach"><div class="errmsg hide"></div></div>
+      <div class="field full"><label>Scientific name <span class="req">*</span></label>
+        <input name="scientificName" class="sciinput" value="${f('scientificName')}" placeholder="Genus species"><div class="errmsg hide"></div></div>
+      <div class="field"><label>Date added / acquired</label>
+        <input type="date" name="dateAdded" value="${c.dateAdded?new Date(c.dateAdded).toISOString().slice(0,10):new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>Colony size</label>
+        <input type="number" name="colonySize" min="0" value="${c.colonySize!=null?c.colonySize:''}" placeholder="0"></div>
+      <div class="field full"><label>Life stages present</label>
+        <div class="checkrow" id="stagePicker">${STAGES.map(s=>`<label class="checkpill ${(c.lifeStages||[]).includes(s)?'on':''}"><input type="checkbox" value="${s}" ${(c.lifeStages||[]).includes(s)?'checked':''}>${s}</label>`).join('')}</div></div>
+      <div class="field"><label>Enclosure type</label>
+        <input name="enclosureType" list="enclList" value="${f('enclosureType')}" placeholder="Terrarium, deli cup, custom…">
+        <datalist id="enclList">${ENCLOSURES.map(e=>`<option value="${e}">`).join('')}</datalist></div>
+      <div class="field"><label>Enclosure size</label><input name="enclosureSize" value="${f('enclosureSize')}" placeholder="24×18×18 in"></div>
+      <div class="field full"><label>Enclosure label / ID <span class="hint">distinguishes duplicate colonies</span></label>
+        <input name="enclosureLabel" value="${f('enclosureLabel')}" placeholder="e.g. Rack B · Tank 2, Rearing room"></div>
+      <div class="field"><label>Substrate</label><input name="substrate" value="${f('substrate')}" placeholder="Coco fiber, sand…"></div>
+      <div class="field"><label>Temperature range</label><input name="temperature" value="${f('temperature')}" placeholder="72-78°F"></div>
+      <div class="field"><label>Humidity range</label><input name="humidity" value="${f('humidity')}" placeholder="50-70%"></div>
+      <div class="field"><label>Feeding frequency</label><input name="feedingFrequency" value="${f('feedingFrequency')}" placeholder="Daily, every 3 days, weekly…"></div>
+      <div class="field full"><label>Diet</label><input name="diet" value="${f('diet')}" placeholder="Leafy greens, crickets, milkweed…"></div>
+      <div class="field full"><label>Notes</label><textarea name="notes" placeholder="Husbandry notes, sourcing, temperament…">${f('notes')}</textarea></div>
+    </div></form>`;
+  const footer=`<button class="btn btn-ghost" data-close>Cancel</button>
+    <button class="btn btn-primary" id="saveEntry">${existing?'Save changes':'Add species'}</button>`;
+  openModal(modalShell({kicker:existing?'Edit entry':'New entry',title:existing?'Edit '+esc(c.commonName):'Add a species',body,footer}));
+
+  // photo wiring
+  const dz=$('#dropzone'), input=$('#photoInput'), prev=$('#dzprev'), rm=$('#removePhoto');
+  const setPhoto=(data)=>{ photoData=data; prev.innerHTML=data?`<img src="${data}">`:ICON.img; rm.classList.toggle('hide',!data); };
+  $('#browseBtn').onclick=()=>input.click();
+  rm.onclick=()=>setPhoto(null);
+  input.onchange=async()=>{ if(input.files[0]){ try{ setPhoto(await fileToDataURL(input.files[0])); }catch(e){ toast('Could not read image','err'); } } };
+  ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+  dz.addEventListener('drop',async e=>{ const file=e.dataTransfer.files[0]; if(file){ try{ setPhoto(await fileToDataURL(file)); }catch(err){ toast('Could not read image','err'); } } });
+  // stage pills toggle
+  $$('#stagePicker .checkpill').forEach(p=>{ const cb=p.querySelector('input'); cb.onchange=()=>p.classList.toggle('on',cb.checked); });
+
+  $('#saveEntry').onclick=()=>{
+    const form=$('#entryForm');
+    const get=n=>form.querySelector(`[name="${n}"]`);
+    let ok=true;
+    ['commonName','scientificName'].forEach(n=>{ const fld=get(n).closest('.field'); const msg=fld.querySelector('.errmsg');
+      if(!get(n).value.trim()){ ok=false; fld.classList.add('err'); msg.textContent='Required'; msg.classList.remove('hide'); }
+      else { fld.classList.remove('err'); msg.classList.add('hide'); } });
+    if(!ok){ toast('Fill in the required fields','err'); return; }
+    const stages=$$('#stagePicker input:checked').map(i=>i.value);
+    const obj=Object.assign({}, existing||{}, {
+      id:(existing&&existing.id)||uuid(),
+      commonName:get('commonName').value.trim(), scientificName:get('scientificName').value.trim(),
+      dateAdded:get('dateAdded').value?new Date(get('dateAdded').value).toISOString():nowISO(),
+      colonySize:Number(get('colonySize').value)||0, lifeStages:stages,
+      enclosureType:get('enclosureType').value.trim(), enclosureSize:get('enclosureSize').value.trim(),
+      enclosureLabel:get('enclosureLabel').value.trim(),
+      substrate:get('substrate').value.trim(), temperature:get('temperature').value.trim(),
+      humidity:get('humidity').value.trim(), diet:get('diet').value.trim(),
+      feedingFrequency:get('feedingFrequency').value.trim(), notes:get('notes').value.trim(),
+      photo:photoData, sopId:(existing&&existing.sopId)||null
+    });
+    const saved=DB.saveCollection(obj);
+    closeModal(); buildNav();
+    if(existing){ toast(saved.commonName+' updated'); if(state.route==='detail') renderDetail(); else render(); }
+    else {
+      toast(saved.commonName+' added to the collection');
+      confirmDialog('Create a care SOP now?','Would you like to generate a Standard Operating Procedure for '+saved.commonName+'? It will be pre-filled from this entry.','Generate SOP',
+        ()=>openSopEditor(saved.id), 'Not now', ()=>go('detail',saved.id));
+    }
+  };
+}
+
+function openLogForm(colId){
+  const cols=DB.collections();
+  const today=new Date().toISOString().slice(0,10);
+  const body=`<form id="logForm">
+    <div class="formgrid">
+      <div class="field full"><label>Species</label>
+        <select name="collectionId" ${colId?'disabled':''}>${cols.map(c=>`<option value="${c.id}" ${c.id===colId?'selected':''}>${esc(c.commonName)}</option>`).join('')}</select></div>
+      <div class="field"><label>Date</label><input type="date" name="date" value="${today}"></div>
+      <div class="field"><label>Task type</label>
+        <select name="taskType">${['feeding','cleaning','census','observation','other'].map(t=>`<option value="${t}">${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></div>
+      <div class="field full"><label>Frequency</label>
+        <div class="radiorow" id="freqRow">${['daily','weekly','monthly'].map((fr,i)=>`<label class="radiopill ${i===1?'on':''}"><input type="radio" name="frequency" value="${fr}" ${i===1?'checked':''} style="display:none">${fr}</label>`).join('')}</div></div>
+      <div class="field"><label>Performed by</label><input name="performedBy" placeholder="Your name" value="${esc(lastKeeper())}"></div>
+      <div class="field"><label>Colony count recorded <span class="hint">optional</span></label><input type="number" name="colonyCountRecorded" min="0" placeholder="—"></div>
+      <div class="field full"><label>Notes</label><textarea name="notes" placeholder="What was done, observations…"></textarea></div>
+    </div></form>`;
+  const footer=`<button class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-green" id="saveLog">Save log entry</button>`;
+  const c=colId?DB.collection(colId):null;
+  openModal(modalShell({kicker:'Care log',title:c?'Log care · '+esc(c.commonName):'Log a care task',body,footer}));
+  $$('#freqRow .radiopill').forEach(p=>{ const r=p.querySelector('input'); r.onchange=()=>{ $$('#freqRow .radiopill').forEach(x=>x.classList.remove('on')); p.classList.add('on'); }; });
+  $('#saveLog').onclick=()=>{
+    const form=$('#logForm'); const get=n=>form.querySelector(`[name="${n}"]`);
+    const cid=colId||get('collectionId').value;
+    if(!get('performedBy').value.trim()){ toast('Add who performed the task','err'); get('performedBy').focus(); return; }
+    const cnt=get('colonyCountRecorded').value;
+    const log={ id:uuid(), collectionId:cid, date:new Date(get('date').value||today).toISOString(),
+      frequency:form.querySelector('[name=frequency]:checked').value, taskType:get('taskType').value,
+      performedBy:get('performedBy').value.trim(), colonyCountRecorded:cnt===''?null:Number(cnt),
+      notes:get('notes').value.trim(), createdAt:nowISO() };
+    DB.saveLog(log);
+    if(log.colonyCountRecorded!=null){ const col=DB.collection(cid); if(col){ col.colonySize=log.colonyCountRecorded; DB.saveCollection(col); } }
+    localStorage.setItem('bugbarn_lastkeeper',log.performedBy);
+    closeModal(); toast('Care task logged');
+    if(state.route==='detail') renderDetail(); else if(state.route==='schedule') renderSchedule(); else if(state.route==='dashboard') renderDashboard();
+  };
+}
+function lastKeeper(){ return localStorage.getItem('bugbarn_lastkeeper')||''; }
+
+function confirmDialog(title,msg,confirmLabel,onConfirm,cancelLabel,onCancel){
+  const danger=/delete|clear|remove|replace/i.test(confirmLabel);
+  const body=`<p style="font-size:14px;line-height:1.55;color:var(--ink)">${esc(msg)}</p>`;
+  const footer=`<button class="btn btn-ghost" id="cfCancel">${esc(cancelLabel||'Cancel')}</button>
+    <button class="btn ${danger?'btn-danger':'btn-primary'}" id="cfOk">${esc(confirmLabel)}</button>`;
+  openModal(modalShell({kicker:'Please confirm',title:esc(title),body,footer}),{cls:'confirm'});
+  $('#cfOk').onclick=()=>{ closeModal(); onConfirm&&onConfirm(); };
+  $('#cfCancel').onclick=()=>{ closeModal(); onCancel&&onCancel(); };
+}
+function duplicateEntry(c){
+  const copy=Object.assign({}, c, { id:uuid(),
+    enclosureLabel:(c.enclosureLabel?c.enclosureLabel+' (copy)':'Copy of '+c.commonName),
+    sopId:null, exhibit:{onExhibit:false,sentOut:null,dueBack:null,custodian:''},
+    careTasks:getCareTasks(c).map(t=>Object.assign({},t,{id:uuid()})),
+    createdAt:nowISO(), updatedAt:nowISO() });
+  DB.saveCollection(copy);
+  buildNav(); toast('Duplicated — edit the new enclosure’s details');
+  openEntryForm(copy);
+}
+
+function openExhibitForm(colId){
+  const c=DB.collection(colId); const e=exhibitOf(c);
+  if(e.onExhibit){
+    confirmDialog('Return '+c.commonName+' to the barn?', (e.custodian?('Currently out with '+e.custodian+'. '):'')+'This marks it back in the Bug Barn and clears the loan details.','Return to barn',
+      ()=>{ c.exhibit={onExhibit:false,sentOut:null,dueBack:null,custodian:''}; DB.saveCollection(c); toast(c.commonName+' is back in the barn'); renderDetail(); });
+    return;
+  }
+  const today=new Date().toISOString().slice(0,10);
+  const body=`<form id="exForm"><div class="formgrid">
+    <div class="field full"><label>Who / where is it going?</label><input name="custodian" placeholder="Person, classroom, or display location"></div>
+    <div class="field"><label>Date sent out</label><input type="date" name="sentOut" value="${today}"></div>
+    <div class="field"><label>Due back <span class="hint">optional</span></label><input type="date" name="dueBack"></div>
+  </div></form>`;
+  openModal(modalShell({kicker:'Exhibit loan',title:'Check out '+esc(c.commonName),body,
+    footer:`<button class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-primary" id="saveEx">${ICON.box} Check out to exhibit</button>`}));
+  $('#saveEx').onclick=()=>{ const form=$('#exForm'); const get=n=>form.querySelector(`[name="${n}"]`);
+    c.exhibit={ onExhibit:true, sentOut:get('sentOut').value?new Date(get('sentOut').value).toISOString():nowISO(),
+      dueBack:get('dueBack').value?new Date(get('dueBack').value).toISOString():null, custodian:get('custodian').value.trim() };
+    DB.saveCollection(c); closeModal(); toast(c.commonName+' checked out to exhibit'); renderDetail(); };
+}
+
+function openCareTasksEditor(colId){
+  const c=DB.collection(colId);
+  const TYPES=['feeding','cleaning','census','observation','other'];
+  const FREQS=['daily','weekly','monthly'];
+  const rowHtml=(t)=>`<div class="taskrow">
+    <input class="tk-label" value="${esc(t.label||'')}" placeholder="Task name">
+    <select class="tk-type">${TYPES.map(x=>`<option value="${x}" ${t.taskType===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select>
+    <select class="tk-freq">${FREQS.map(x=>`<option value="${x}" ${t.frequency===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select>
+    <button type="button" class="btn-icon tk-del" title="Remove">${ICON.trash}</button>
+  </div>`;
+  const body=`<p class="muted" style="margin:0 0 14px">Define the recurring care this colony needs. These drive the “due today / overdue” flags on the dashboard and schedule.</p>
+    <div class="tasklist" id="taskList">${getCareTasks(c).map(rowHtml).join('')}</div>
+    <button type="button" class="btn btn-ghost btn-sm" id="addTask" style="margin-top:12px">${ICON.plus} Add task</button>`;
+  openModal(modalShell({kicker:'Routine care',title:esc(c.commonName)+' — care tasks',body,
+    footer:`<button class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-primary" id="saveTasks">Save tasks</button>`}));
+  const list=$('#taskList');
+  const bindDel=()=>$$('.tk-del',list).forEach(b=>b.onclick=()=>b.closest('.taskrow').remove());
+  bindDel();
+  $('#addTask').onclick=()=>{ const div=el(rowHtml({label:'',taskType:'feeding',frequency:'weekly'})); list.appendChild(div); bindDel(); div.querySelector('.tk-label').focus(); };
+  $('#saveTasks').onclick=()=>{
+    c.careTasks=$$('.taskrow',list).map(r=>({ id:uuid(), label:r.querySelector('.tk-label').value.trim()||'Task',
+      taskType:r.querySelector('.tk-type').value, frequency:r.querySelector('.tk-freq').value }));
+    DB.saveCollection(c); closeModal(); toast('Care tasks updated'); renderDetail();
+  };
+}
+
+/* ===== SECTION: SCHEDULE ===== */
+function dateKey(d){ const x=new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+function logsByDay(){ const m={}; DB.logs().forEach(l=>{ const k=dateKey(l.date); (m[k]=m[k]||[]).push(l); }); return m; }
+const SHORT=s=>{ const w=s.split(' '); return w.length>2?w.slice(-2).join(' '):s; };
+
+function renderSchedule(){
+  if(!state.calMonth) state.calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  const overdue=DB.collections().map(c=>({c,st:careStatus(c)})).filter(o=>o.st.status==='overdue');
+  $('#view').innerHTML=`
+    <div class="phead">
+      <div><p class="kicker">Husbandry Calendar</p><h1 class="ptitle">Care Schedule</h1>
+      <p class="psub">Every logged task, color-coded by type</p></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="segwrap" id="segToggle">
+          <button class="seg ${state.schedView==='calendar'?'on':''}" data-v="calendar">Monthly</button>
+          <button class="seg ${state.schedView==='weekly'?'on':''}" data-v="weekly">Weekly</button>
+        </div>
+        <button class="btn btn-green" id="schedLog">${ICON.plus} Log Care Task</button>
+      </div>
+    </div>
+    ${overdue.length?`<div class="alert">${ICON.alert}<div class="at"><b>${overdue.length} overdue:</b>
+      <span class="names"> ${overdue.map(o=>esc(o.c.commonName)+(o.st.daysSince===Infinity?' (never)':' ('+o.st.daysSince+'d)')).join(' · ')}</span></div></div>`:''}
+    <div id="schedBody"></div>
+    <div class="legend">${Object.entries(TASK_COLORS).map(([k,v])=>`<span><i style="background:${v}"></i>${k}</span>`).join('')}</div>`;
+  $$('#segToggle .seg').forEach(b=>b.onclick=()=>{ state.schedView=b.dataset.v; renderSchedule(); });
+  $('#schedLog').onclick=()=>openLogForm(null);
+  if(state.schedView==='calendar') renderCalendar(); else renderWeekly();
+}
+
+function renderCalendar(){
+  const month=state.calMonth, y=month.getFullYear(), m=month.getMonth();
+  const first=new Date(y,m,1), startDow=first.getDay(), daysIn=new Date(y,m+1,0).getDate();
+  const prevDays=new Date(y,m,0).getDate();
+  const map=logsByDay(), todayKey=dateKey(new Date());
+  const cells=[];
+  for(let i=0;i<startDow;i++){ const d=prevDays-startDow+1+i; cells.push({day:d,dim:true,date:new Date(y,m-1,d)}); }
+  for(let d=1;d<=daysIn;d++) cells.push({day:d,dim:false,date:new Date(y,m,d)});
+  while(cells.length%7!==0){ const d=cells.length-(startDow+daysIn)+1; cells.push({day:d,dim:true,date:new Date(y,m+1,d)}); }
+
+  const dows=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  $('#schedBody').innerHTML=`
+    <div class="cal-nav no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <button class="btn btn-ghost btn-sm" id="prevM">${ICON.chL}</button>
+      <div class="mlabel">${month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
+      <button class="btn btn-ghost btn-sm" id="nextM">${ICON.chR}</button>
+      <button class="btn btn-ghost btn-sm" id="todayM" style="margin-left:8px">Today</button>
+    </div>
+    <div class="calendar"><div class="cal-head">${dows.map(d=>`<div>${d}</div>`).join('')}</div>
+    <div class="cal-body">${cells.map(c=>{
+      const k=dateKey(c.date), evts=map[k]||[];
+      return `<div class="cal-cell ${c.dim?'dim':''} ${k===todayKey?'today':''} ${evts.length?'clickable':''}" data-day="${k}">
+        <div class="dnum">${c.day}</div>
+        ${evts.slice(0,3).map(e=>{ const col=DB.collection(e.collectionId); return `<div class="cal-evt" style="background:${hexA(TASK_COLORS[e.taskType],.16)};color:${TASK_COLORS[e.taskType]}">${esc(SHORT(col?col.commonName:'?'))}</div>`; }).join('')}
+        ${evts.length>3?`<div class="cal-more">+${evts.length-3} more</div>`:''}
+      </div>`; }).join('')}</div></div>`;
+  $('#prevM').onclick=()=>{ state.calMonth=new Date(y,m-1,1); renderCalendar(); };
+  $('#nextM').onclick=()=>{ state.calMonth=new Date(y,m+1,1); renderCalendar(); };
+  $('#todayM').onclick=()=>{ state.calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1); renderCalendar(); };
+  $$('.cal-cell.clickable').forEach(cell=>cell.onclick=()=>dayModal(cell.dataset.day));
+}
+function hexA(hex,a){ const h=hex.replace('#',''); const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
+
+function renderWeekly(){
+  const base=new Date(); base.setHours(0,0,0,0); base.setDate(base.getDate()-base.getDay()+state.weekOffset*7);
+  const map=logsByDay(), todayKey=dateKey(new Date());
+  const days=[]; for(let i=0;i<7;i++){ const d=new Date(base); d.setDate(base.getDate()+i); days.push(d); }
+  const verb={feeding:'Feeding',cleaning:'Cleaning',census:'Census',observation:'Observation',other:'Task'};
+  const rangeLabel=days[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+days[6].toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  $('#schedBody').innerHTML=`
+    <div class="cal-nav no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <button class="btn btn-ghost btn-sm" id="prevW">${ICON.chL}</button>
+      <div class="mlabel" style="min-width:220px">${rangeLabel}</div>
+      <button class="btn btn-ghost btn-sm" id="nextW">${ICON.chR}</button>
+      <button class="btn btn-ghost btn-sm" id="thisW" style="margin-left:8px">This week</button>
+    </div>
+    <div class="agenda">${days.map(d=>{ const k=dateKey(d), evts=(map[k]||[]).sort((a,b)=>a.date.localeCompare(b.date));
+      return `<div class="aday ${k===todayKey?'today':''}">
+        <div class="aday-h"><div class="ad">${d.toLocaleDateString('en-US',{weekday:'long'})}<small>${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</small></div>
+          <div class="acount">${evts.length} task${evts.length!==1?'s':''}</div></div>
+        ${evts.length? evts.map(e=>{ const c=DB.collection(e.collectionId); return `<div class="atask">
+            <span class="fdot" style="background:${TASK_COLORS[e.taskType]}"></span>
+            <span class="tasktag tt-${e.taskType}">${e.taskType}</span>
+            <span class="aname">${esc(c?c.commonName:'—')}</span>
+            ${e.notes?`<span class="muted" style="font-size:12px">${esc(e.notes)}</span>`:''}
+            <span class="aby">${esc(e.performedBy||'')}</span></div>`; }).join('')
+          : `<div class="none">No tasks logged.</div>`}
+      </div>`; }).join('')}</div>`;
+  $('#prevW').onclick=()=>{ state.weekOffset--; renderWeekly(); };
+  $('#nextW').onclick=()=>{ state.weekOffset++; renderWeekly(); };
+  $('#thisW').onclick=()=>{ state.weekOffset=0; renderWeekly(); };
+}
+
+function dayModal(key){
+  const evts=(logsByDay()[key]||[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const d=new Date(key+'T12:00:00');
+  const body=evts.length? `<div class="feed">${evts.map(e=>{ const c=DB.collection(e.collectionId); return `<div class="fitem">
+      <span class="fdot" style="background:${TASK_COLORS[e.taskType]};margin-top:6px"></span>
+      <div><div class="ft"><span class="tasktag tt-${e.taskType}">${e.taskType}</span> <b>${esc(c?c.commonName:'—')}</b>${e.colonyCountRecorded!=null?` · count ${e.colonyCountRecorded}`:''}</div>
+      <div class="fw">${fmtTime(e.date)} · ${esc(e.performedBy||'—')}${e.notes?' · '+esc(e.notes):''}</div></div></div>`; }).join('')}</div>`
+    : `<p class="muted">No tasks logged on this day.</p>`;
+  openModal(modalShell({kicker:'Day log',title:d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),body,
+    footer:`<button class="btn btn-ghost" data-close>Close</button><button class="btn btn-green" id="dmLog">${ICON.plus} Log a task</button>`}));
+  $('#dmLog').onclick=()=>{ closeModal(); openLogForm(null); };
+}
+
+/* ===== SECTION: SOP ===== */
+function openSopEditor(colId){
+  const c=DB.collection(colId); if(!c) return;
+  let sop=DB.sopFor(colId);
+  const isNew=!sop;
+  if(isNew){ // pre-fill from entry
+    sop={ id:uuid(), collectionId:colId, speciesName:c.commonName,
+      biologyOverview:'', 
+      housingEnvironment:[c.enclosureType&&('Enclosure: '+c.enclosureType+(c.enclosureSize?(' ('+c.enclosureSize+')'):'')),
+        c.temperature&&('Temperature: '+c.temperature), c.humidity&&('Humidity: '+c.humidity), c.substrate&&('Substrate: '+c.substrate)].filter(Boolean).join('. '),
+      feedingProtocol:[c.diet&&('Diet: '+c.diet), c.feedingFrequency&&('Frequency: '+c.feedingFrequency)].filter(Boolean).join('. '),
+      cleaningSchedule:'', populationCensus:'', healthSafetyNotes:'', ppeRequired:'', biteStingRisk:'low', notes:c.notes||'',
+      createdAt:nowISO(), updatedAt:nowISO() };
+  }
+  const PPE=['gloves','eye protection','long sleeves','respirator'];
+  const sel=(name,val)=>['low','medium','high'].map(r=>`<option value="${r}" ${val===r?'selected':''}>${r[0].toUpperCase()+r.slice(1)}</option>`).join('');
+  const ta=(label,key,hint)=>`<div class="field full"><label>${label}</label><div class="hint">${hint}</div><textarea name="${key}" style="min-height:80px">${esc(sop[key])}</textarea></div>`;
+  const ppeSel=(sop.ppeRequired||'').toLowerCase();
+  const body=`<form id="sopForm"><div class="formgrid">
+    ${ta('Biology Overview','biologyOverview','Life cycle summary, natural history, notable behaviors')}
+    ${ta('Housing &amp; Environment','housingEnvironment','Enclosure specs, temperature, humidity, substrate, lighting')}
+    ${ta('Feeding Protocol','feedingProtocol','Diet items, frequency, amounts, food prep')}
+    ${ta('Cleaning Schedule &amp; Protocol','cleaningSchedule','Spot-clean & full-clean frequency, safe steps while animals are present')}
+    ${ta('Population Census','populationCensus','How & how often to count/estimate colony size, what to record')}
+    <div class="field"><label>Bite / sting risk</label><select name="biteStingRisk">${sel('biteStingRisk',sop.biteStingRisk)}</select></div>
+    <div class="field"><label>Escape / hazard notes</label><input name="_dummy" class="hide"><div style="font-size:12px;color:var(--ink2);padding-top:6px">Set PPE & detail below ↓</div></div>
+    <div class="field full"><label>PPE required</label>
+      <div class="checkrow" id="ppePicker">${PPE.map(p=>`<label class="checkpill ${ppeSel.includes(p)?'on':''}"><input type="checkbox" value="${p}" ${ppeSel.includes(p)?'checked':''}>${p}</label>`).join('')}</div></div>
+    ${ta('Health &amp; Safety Notes','healthSafetyNotes','Zoonosis concerns, escape risk level, first-aid notes')}
+    ${ta('General Notes','notes','Anything else')}
+  </div></form>`;
+  openModal(modalShell({kicker:isNew?'Generate SOP':'Edit SOP',title:esc(c.commonName)+' — Care SOP',body,
+    footer:`<button class="btn btn-ghost left" data-close>Cancel</button>
+      ${isNew?'':`<button class="btn btn-ghost" id="sopPrint">${ICON.print} Print / PDF</button>`}
+      <button class="btn btn-primary" id="saveSop">${isNew?'Create SOP':'Save SOP'}</button>`,wide:true}),{wide:true});
+  $$('#ppePicker .checkpill').forEach(p=>{ const cb=p.querySelector('input'); cb.onchange=()=>p.classList.toggle('on',cb.checked); });
+  const ps=$('#sopPrint'); if(ps) ps.onclick=()=>printSop(colId);
+  $('#saveSop').onclick=()=>{
+    const form=$('#sopForm'); const get=n=>form.querySelector(`[name="${n}"]`);
+    ['biologyOverview','housingEnvironment','feedingProtocol','cleaningSchedule','populationCensus','healthSafetyNotes','notes'].forEach(k=>sop[k]=get(k).value.trim());
+    sop.biteStingRisk=get('biteStingRisk').value;
+    sop.ppeRequired=$$('#ppePicker input:checked').map(i=>i.value).join(', ');
+    sop.speciesName=c.commonName;
+    DB.saveSop(sop);
+    c.sopId=sop.id; DB.saveCollection(c);
+    closeModal(); buildNav(); toast(isNew?'SOP created for '+c.commonName:'SOP updated');
+    if(state.route==='detail') renderDetail(); else if(state.route==='sops') renderSops(); else go('detail',colId);
+  };
+}
+
+function printSop(colId){
+  const c=DB.collection(colId), sop=DB.sopFor(colId);
+  if(!sop){ toast('No SOP to print','err'); return; }
+  const secs=[['Biology Overview','biologyOverview'],['Housing & Environment','housingEnvironment'],['Feeding Protocol','feedingProtocol'],
+    ['Cleaning Schedule & Protocol','cleaningSchedule'],['Population Census','populationCensus'],['Health & Safety Notes','healthSafetyNotes'],['General Notes','notes']];
+  $('#printArea').innerHTML=`
+    <div class="p-title">${esc(c.commonName)} — Care SOP</div>
+    <div class="p-sci">${esc(c.scientificName)}</div>
+    <div class="p-meta">PURDUE ENTOMOLOGY · BUG BARN LIVING COLLECTIONS · Enclosure: ${esc(c.enclosureType||'—')} · Colony size: ${c.colonySize||0}
+      · Generated ${new Date().toLocaleDateString()} · Risk: <span class="p-risk">${(sop.biteStingRisk||'low').toUpperCase()} BITE/STING</span>${sop.ppeRequired?(' · PPE: '+esc(sop.ppeRequired)):''}</div>
+    ${secs.filter(([_,k])=>sop[k]).map(([label,k])=>`<div class="p-sec"><h3>${label}</h3><p>${esc(sop[k])}</p></div>`).join('')}
+    <div class="p-foot">Bug Barn Living Collections — printed from the husbandry dashboard. SOP last updated ${fmtDate(sop.updatedAt)}.</div>`;
+  window.print();
+}
+
+/* ---------- SOP LIBRARY ---------- */
+function renderSops(){
+  const cols=DB.collections();
+  const withSop=cols.filter(c=>DB.sopFor(c.id));
+  const without=cols.filter(c=>!DB.sopFor(c.id));
+  $('#view').innerHTML=`
+    <div class="phead"><div><p class="kicker">Husbandry Protocols</p><h1 class="ptitle">SOP Library</h1>
+      <p class="psub">${withSop.length} of ${cols.length} species documented</p></div></div>
+    ${withSop.length?`<div class="cardgrid">${withSop.map(c=>{ const s=DB.sopFor(c.id);
+      return `<div class="scard" data-id="${c.id}" style="cursor:default">
+        <div class="bd" style="padding:16px 18px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><h4>${esc(c.commonName)}</h4><span class="risk ${s.biteStingRisk}">${s.biteStingRisk==='medium'?'med':s.biteStingRisk}</span></div>
+          <div class="sci">${esc(c.scientificName)}</div>
+          <p class="muted" style="font-size:12.5px;margin:4px 0 14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(s.biologyOverview||s.housingEnvironment||'No overview yet.')}</p>
+          <div style="display:flex;gap:8px;margin-top:auto">
+            <button class="btn btn-ghost btn-sm" data-print="${c.id}">${ICON.print} PDF</button>
+            <button class="btn btn-green btn-sm" data-edit="${c.id}">${ICON.edit} Edit</button>
+          </div>
+        </div></div>`; }).join('')}</div>`
+      :`<div class="empty">${ICON.sop}<h3>No SOPs yet</h3><p class="muted">Open a species and generate its first care SOP.</p></div>`}
+    ${without.length?`<div class="sectiontitle">Awaiting an SOP</div>
+      <div class="cardgrid">${without.map(c=>`<div class="scard" style="cursor:default"><div class="bd" style="padding:16px 18px">
+        <h4>${esc(c.commonName)}</h4><div class="sci">${esc(c.scientificName)}</div>
+        <button class="btn btn-primary btn-sm" data-gen="${c.id}" style="margin-top:14px">${ICON.plus} Generate SOP</button></div></div>`).join('')}</div>`:''}`;
+  $$('[data-edit]').forEach(b=>b.onclick=()=>openSopEditor(b.dataset.edit));
+  $$('[data-gen]').forEach(b=>b.onclick=()=>openSopEditor(b.dataset.gen));
+  $$('[data-print]').forEach(b=>b.onclick=()=>printSop(b.dataset.print));
+}
+
+/* ===== SECTION: SETTINGS ===== */
+function renderSettings(){
+  const s=stats();
+  $('#view').innerHTML=`
+    <div class="phead"><div><p class="kicker">Data &amp; Backup</p><h1 class="ptitle">Settings</h1>
+      <p class="psub">${s.species} species · ${DB.sops().length} SOPs · ${DB.logs().length} care logs stored locally</p></div></div>
+    <div class="setcard">
+      <h3>Export data</h3>
+      <p>Download a single JSON backup of every species, SOP, and care log (photos included). Keep it safe or move it to another machine.</p>
+      <div class="setrow"><button class="btn btn-primary" id="exportBtn">${ICON.dl} Export backup (.json)</button></div>
+    </div>
+    <div class="setcard">
+      <h3>Import data</h3>
+      <p>Load a previously exported backup. Choose whether to <b>merge</b> it into your current data (keeps both, updates matching IDs) or <b>replace</b> everything.</p>
+      <div class="setrow"><button class="btn btn-ghost" id="importBtn">${ICON.up} Choose backup file…</button></div>
+      <input type="file" id="importInput" accept="application/json,.json" class="hide">
+    </div>
+    <div class="setcard">
+      <h3>Reset sample data</h3>
+      <p>Reload the demo collection (8 species with SOPs and care history). This replaces your current data.</p>
+      <div class="setrow"><button class="btn btn-ghost" id="reseedBtn">Reload sample data</button></div>
+    </div>
+    <div class="setcard danger">
+      <h3 style="color:#9a3210">Clear all data</h3>
+      <p>Permanently delete every species, SOP, and care log from this browser. Export a backup first if you might want it later.</p>
+      <div class="setrow"><button class="btn btn-danger" id="clearBtn">${ICON.trash} Clear everything</button></div>
+    </div>`;
+  $('#exportBtn').onclick=exportData;
+  $('#importBtn').onclick=()=>$('#importInput').click();
+  $('#importInput').onchange=handleImport;
+  $('#reseedBtn').onclick=()=>confirmDialog('Reload sample data?','This replaces your current collection with the demo dataset.','Reload sample',()=>{ DB.clearAll(); seedData(); buildNav(); toast('Sample data reloaded'); go('dashboard'); });
+  $('#clearBtn').onclick=()=>confirmDialog('Clear all data?','This permanently deletes everything stored in this browser. This cannot be undone.','Clear everything',()=>{ DB.clearAll(); buildNav(); toast('All data cleared'); go('dashboard'); });
+}
+function exportData(){
+  const data=DB.exportAll();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='bugbarn_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Backup exported');
+}
+function handleImport(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    let data; try{ data=JSON.parse(reader.result); }catch(err){ toast('Invalid JSON file','err'); return; }
+    if(!data.bugbarn_collections){ toast('Not a Bug Barn backup','err'); return; }
+    const counts=`${(data.bugbarn_collections||[]).length} species, ${(data.bugbarn_sops||[]).length} SOPs, ${(data.bugbarn_carelogs||[]).length} logs`;
+    confirmDialog('Import backup?','This file contains '+counts+'. Merge into your current data, or replace everything?','Merge',
+      ()=>doImport(data,'merge'), 'Replace all', ()=>doImport(data,'replace'));
+  };
+  reader.readAsText(file); e.target.value='';
+}
+function doImport(data,mode){
+  const merge=(key,incoming)=>{ if(mode==='replace'){ DB.write(key,incoming||[]); return; }
+    const cur=DB.read(key); const byId={}; cur.forEach(x=>byId[x.id]=x); (incoming||[]).forEach(x=>byId[x.id]=x);
+    DB.write(key,Object.values(byId)); };
+  merge(KEYS.col,data.bugbarn_collections); merge(KEYS.sop,data.bugbarn_sops); merge(KEYS.log,data.bugbarn_carelogs);
+  localStorage.setItem(KEYS.seeded, localStorage.getItem(KEYS.seeded)||'imported');
+  buildNav(); toast('Data '+(mode==='replace'?'replaced':'merged')); go('dashboard');
+}
+
+/* ===== SECTION: ROUTER + INIT ===== */
+function render(){
+  buildNav();
+  switch(state.route){
+    case 'dashboard': renderDashboard(); break;
+    case 'collections': renderCollections(); break;
+    case 'detail': renderDetail(); break;
+    case 'schedule': renderSchedule(); break;
+    case 'sops': renderSops(); break;
+    case 'settings': renderSettings(); break;
+    default: renderDashboard();
+  }
+}
+function init(){
+  if(localStorage.getItem(KEYS.seeded)!=='1' && DB.collections().length===0) seedData();
+  render();
+}
+init();
+</script>
+</body>
+</html>
