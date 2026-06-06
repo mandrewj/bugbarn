@@ -19,6 +19,10 @@
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
+/* Never let the page scroll sideways; internal scrollers (tables, calendar)
+   still scroll via their own overflow:auto. clip keeps sticky/ fixed intact. */
+html{overflow-x:clip;}
+body{overflow-x:clip;max-width:100%;}
 body{
   font-family:var(--sans); color:var(--ink); background:var(--cream);
   -webkit-font-smoothing:antialiased; line-height:1.45;
