@@ -191,6 +191,7 @@ export default function DetailPage() {
           </div>
           {tasks.length ? (
             <div className="panel" style={{ padding: "6px 16px" }}>
+              <div className="tblwrap">
               <table className="tbl">
                 <thead>
                   <tr>
@@ -228,6 +229,7 @@ export default function DetailPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           ) : (
             <div className="muted" style={{ padding: "6px 2px" }}>
@@ -290,6 +292,7 @@ export default function DetailPage() {
           </div>
           {logs.length ? (
             <div className="panel" style={{ padding: "6px 14px" }}>
+              <div className="tblwrap">
               <table className="tbl">
                 <thead>
                   <tr>
@@ -337,6 +340,7 @@ export default function DetailPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           ) : (
             <div className="muted" style={{ padding: "14px 2px" }}>

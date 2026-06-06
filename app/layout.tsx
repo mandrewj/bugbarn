@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Merriweather, Source_Sans_3, IBM_Plex_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 
@@ -35,6 +35,11 @@ export const metadata: Metadata = {
   title: "Bug Barn — Living Collections",
   description: "Husbandry management for the Purdue Entomology Bug Barn living invertebrate collections.",
   robots: { index: false, follow: false, nocache: true },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

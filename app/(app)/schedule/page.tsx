@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useData } from "@/components/providers/DataProvider";
 import { careStatus, logsByDay } from "@/lib/care";
 import { dateKey, hexA, shortName } from "@/lib/format";
@@ -21,6 +21,13 @@ export default function SchedulePage() {
   const [view, setView] = useState<"calendar" | "weekly">("calendar");
   const [calMonth, setCalMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [weekOffset, setWeekOffset] = useState(0);
+
+  // The weekly agenda reads far better on phones — default to it on small screens.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width:820px)").matches) {
+      setView("weekly");
+    }
+  }, []);
 
   if (loading) return <Splash />;
 
@@ -229,9 +236,7 @@ function WeekAgenda({
         <button className="btn btn-ghost btn-sm" onClick={onPrev}>
           <Icon name="chL" />
         </button>
-        <div className="mlabel" style={{ minWidth: 220 }}>
-          {rangeLabel}
-        </div>
+        <div className="mlabel mlabel-wide">{rangeLabel}</div>
         <button className="btn btn-ghost btn-sm" onClick={onNext}>
           <Icon name="chR" />
         </button>
