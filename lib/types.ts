@@ -66,6 +66,45 @@ export interface Sop {
   updatedAt: string;
 }
 
+/** An inclusive numeric target band (e.g. acceptable temperature range). */
+export interface Range {
+  min: number;
+  max: number;
+}
+
+/** A recurring managerial/cleaning task for the facility (mirrors CareTask). */
+export interface FacilityTask {
+  id: string;
+  label: string; // "HVAC filter check", "Mop floors", "Sticky-trap census"…
+  taskType: TaskType;
+  frequency: Frequency;
+}
+
+/** The Bug Barn facility itself — ambient targets + managerial routines. */
+export interface Facility {
+  name: string; // default "Bug Barn"
+  tempTarget: Range | null; // °F acceptable band
+  humidityTarget: Range | null; // % RH acceptable band
+  tasks: FacilityTask[]; // recurring managerial tasks
+  notes: string;
+  updatedAt: string;
+}
+
+/** One facility check: environment readings and/or a managerial task done. */
+export interface FacilityLog {
+  id: string;
+  date: string; // ISO timestamp
+  temperature: number | null; // °F reading at this check
+  humidity: number | null; // % RH reading at this check
+  frequency?: Frequency; // routine cadence; absent for unscheduled checks
+  taskId?: string; // the FacilityTask this log satisfies (absent: reading / notes)
+  taskType: TaskType;
+  taskLabel?: string; // the routine's name (or "Environment reading") this records
+  performedBy: string;
+  notes: string;
+  createdAt: string;
+}
+
 export interface CareLog {
   id: string;
   collectionId: string;
@@ -86,6 +125,8 @@ export interface Dataset {
   collections: CollectionEntry[];
   sops: Sop[];
   carelogs: CareLog[];
+  facility: Facility;
+  facilitylogs: FacilityLog[];
 }
 
 /** Canonical export/import envelope — matches the prototype's backup shape. */
@@ -96,10 +137,17 @@ export interface BackupEnvelope {
   bugbarn_collections: CollectionEntry[];
   bugbarn_sops: Sop[];
   bugbarn_carelogs: CareLog[];
+  bugbarn_facility?: Facility; // added in v2; optional so older backups still import
+  bugbarn_facilitylogs?: FacilityLog[];
 }
 
-export const DATA_VERSION = 1;
+export const DATA_VERSION = 2;
+
+/** A fresh, empty facility record. */
+export function defaultFacility(): Facility {
+  return { name: "Bug Barn", tempTarget: null, humidityTarget: null, tasks: [], notes: "", updatedAt: new Date().toISOString() };
+}
 
 export function emptyDataset(): Dataset {
-  return { version: DATA_VERSION, collections: [], sops: [], carelogs: [] };
+  return { version: DATA_VERSION, collections: [], sops: [], carelogs: [], facility: defaultFacility(), facilitylogs: [] };
 }

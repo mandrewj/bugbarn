@@ -2,21 +2,26 @@
 
 import Link from "next/link";
 import { useData } from "@/components/providers/DataProvider";
-import { computeStats, careStatus, exhibitOf } from "@/lib/care";
+import { computeStats, careStatus, exhibitOf, facilityRollup } from "@/lib/care";
 import { greeting, relTime } from "@/lib/format";
 import { ACTIVITY_VERB, TASK_COLORS } from "@/lib/constants";
 import { PageHeader, Splash } from "@/components/ui/bits";
 import { SpeciesRow } from "@/components/SpeciesRow";
 import { Icon } from "@/components/Icon";
 import { useEntryForm } from "@/components/modals/EntryForm";
+import { useLogForm } from "@/components/modals/LogForm";
+import { useFacilityLogForm } from "@/components/modals/FacilityLogForm";
 
 export default function DashboardPage() {
-  const { collections, carelogs, loading } = useData();
+  const { collections, carelogs, facility, facilitylogs, loading } = useData();
   const openEntryForm = useEntryForm();
+  const openLogForm = useLogForm();
+  const openFacilityLog = useFacilityLogForm();
 
   if (loading) return <Splash />;
 
   const s = computeStats(collections, carelogs);
+  const fac = facilityRollup(facility, facilitylogs);
   const attention = collections
     .map((c) => ({ c, st: careStatus(carelogs, c) }))
     .filter((o) => o.st.status !== "ok")
@@ -38,6 +43,29 @@ export default function DashboardPage() {
           </button>
         }
       />
+
+      <div className="quickactions">
+        <button className="qaction" onClick={() => openLogForm(null)}>
+          <span className="qa-ico qa-green">
+            <Icon name="leaf" />
+          </span>
+          <span className="qa-text">
+            <b>Log Care Task</b>
+            <small>Record feeding, cleaning, census &amp; more</small>
+          </span>
+          <Icon name="chR" className="qa-arrow" />
+        </button>
+        <button className="qaction" onClick={() => openFacilityLog()}>
+          <span className="qa-ico qa-amber">
+            <Icon name="home" />
+          </span>
+          <span className="qa-text">
+            <b>Log Facility Check</b>
+            <small>Temperature, humidity &amp; barn tasks</small>
+          </span>
+          <Icon name="chR" className="qa-arrow" />
+        </button>
+      </div>
 
       {s.exhibitOverdue.length ? (
         <div className="alert">
@@ -88,6 +116,30 @@ export default function DashboardPage() {
           <div className="l">Overdue {s.overdue ? "· check soon" : ""}</div>
         </div>
       </div>
+
+      <Link href="/facility" className={`facility-summary ${fac.tempFlag === "low" || fac.tempFlag === "high" || fac.humidityFlag === "low" || fac.humidityFlag === "high" ? "warn" : ""}`}>
+        <span className="fs-ico">
+          <Icon name="home" />
+        </span>
+        <div className="fs-main">
+          <b>{facility.name || "Bug Barn"} facility</b>
+          <span className="fs-readings">
+            <span className={fac.tempFlag === "low" || fac.tempFlag === "high" ? "out" : ""}>
+              {fac.latest?.temperature != null ? `${fac.latest.temperature}°F` : "— °F"}
+            </span>
+            <span className={fac.humidityFlag === "low" || fac.humidityFlag === "high" ? "out" : ""}>
+              {fac.latest?.humidity != null ? `${fac.latest.humidity}%` : "— %"}
+            </span>
+            <small>{fac.latest ? `updated ${relTime(fac.latest.date)}` : "no readings yet"}</small>
+          </span>
+        </div>
+        <div className="fs-tasks">
+          {fac.overdueCount ? <span className="risk high">{fac.overdueCount} overdue</span> : null}
+          {fac.dueCount ? <span className="risk med">{fac.dueCount} due</span> : null}
+          {!fac.overdueCount && !fac.dueCount ? <span className="risk low">tasks on track</span> : null}
+          <Icon name="chR" className="qa-arrow" />
+        </div>
+      </Link>
 
       <div className="grid2">
         <div className="panel">

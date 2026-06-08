@@ -65,6 +65,7 @@ export const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", href: "/", icon: "dash" as const },
   { key: "collections", label: "Collections", href: "/collections", icon: "bug" as const },
   { key: "schedule", label: "Care Schedule", href: "/schedule", icon: "cal" as const },
+  { key: "facility", label: "Facility", href: "/facility", icon: "home" as const },
   { key: "sops", label: "SOP Library", href: "/sops", icon: "sop" as const },
   { key: "settings", label: "Settings", href: "/settings", icon: "set" as const },
 ];
