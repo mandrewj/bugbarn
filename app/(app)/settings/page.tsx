@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { BackupEnvelope } from "@/lib/types";
-import { DATA_VERSION } from "@/lib/types";
+import { DATA_VERSION, defaultFacility } from "@/lib/types";
 import { useData } from "@/components/providers/DataProvider";
 import { useToast } from "@/components/ui/Toasts";
 import { useConfirm } from "@/components/ui/Modal";
@@ -65,6 +65,8 @@ export default function SettingsPage() {
             collections: data.bugbarn_collections || [],
             sops: data.bugbarn_sops || [],
             carelogs: data.bugbarn_carelogs || [],
+            facility: data.bugbarn_facility || defaultFacility(),
+            facilitylogs: data.bugbarn_facilitylogs || [],
           });
           toast("Data replaced");
           router.push("/");

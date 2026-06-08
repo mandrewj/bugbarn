@@ -14,7 +14,7 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import type { Dataset, CollectionEntry } from "./types";
-import { DATA_VERSION, emptyDataset } from "./types";
+import { DATA_VERSION, emptyDataset, defaultFacility } from "./types";
 
 const BLOB_PATH = "bugbarn.json";
 const LOCAL_PATH = path.join(process.cwd(), "data", "bugbarn.json");
@@ -77,6 +77,8 @@ export function migrate(data: Dataset): Dataset {
     collections,
     sops: data.sops || [],
     carelogs: data.carelogs || [],
+    facility: data.facility || defaultFacility(),
+    facilitylogs: data.facilitylogs || [],
   };
 }
 

@@ -2,8 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import type { CareLog, CollectionEntry, Dataset, Sop, BackupEnvelope } from "@/lib/types";
-import { DATA_VERSION } from "@/lib/types";
+import type { CareLog, CollectionEntry, Dataset, Sop, BackupEnvelope, Facility, FacilityLog } from "@/lib/types";
+import { DATA_VERSION, defaultFacility } from "@/lib/types";
 import { nowISO } from "@/lib/format";
 import { getKeepers, getLastKeeper, rememberKeeper } from "@/lib/keeper";
 import { useToast } from "@/components/ui/Toasts";
@@ -12,12 +12,17 @@ interface DataApi {
   collections: CollectionEntry[];
   sops: Sop[];
   carelogs: CareLog[];
+  facility: Facility;
+  facilitylogs: FacilityLog[];
   loading: boolean;
   saveCollection: (c: CollectionEntry) => CollectionEntry;
   deleteCollection: (id: string) => void;
   saveSop: (s: Sop) => Sop;
   saveLog: (l: CareLog) => void;
   deleteLog: (id: string) => void;
+  saveFacility: (f: Facility) => Facility;
+  saveFacilityLog: (l: FacilityLog) => void;
+  deleteFacilityLog: (id: string) => void;
   replaceDataset: (ds: Dataset) => void;
   mergeBackup: (env: BackupEnvelope) => void;
   clearAll: () => Promise<void>;
@@ -36,7 +41,7 @@ export function useData(): DataApi {
   return ctx;
 }
 
-const EMPTY: Dataset = { version: DATA_VERSION, collections: [], sops: [], carelogs: [] };
+const EMPTY: Dataset = { version: DATA_VERSION, collections: [], sops: [], carelogs: [], facility: defaultFacility(), facilitylogs: [] };
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -209,8 +214,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [apply],
   );
 
+  const saveFacility = useCallback(
+    (f: Facility): Facility => {
+      const saved: Facility = { ...f, updatedAt: nowISO() };
+      apply((d) => ({ ...d, facility: saved }));
+      return saved;
+    },
+    [apply],
+  );
+
+  const saveFacilityLog = useCallback(
+    (l: FacilityLog) => {
+      apply((d) => {
+        const logs = d.facilitylogs.slice();
+        const i = logs.findIndex((x) => x.id === l.id);
+        if (i >= 0) logs[i] = l;
+        else logs.push({ ...l, createdAt: l.createdAt || nowISO() });
+        return { ...d, facilitylogs: logs };
+      });
+    },
+    [apply],
+  );
+
+  const deleteFacilityLog = useCallback(
+    (id: string) => apply((d) => ({ ...d, facilitylogs: d.facilitylogs.filter((l) => l.id !== id) })),
+    [apply],
+  );
+
   const replaceDataset = useCallback(
-    (ds: Dataset) => apply(() => ({ version: DATA_VERSION, collections: ds.collections || [], sops: ds.sops || [], carelogs: ds.carelogs || [] })),
+    (ds: Dataset) =>
+      apply(() => ({
+        version: DATA_VERSION,
+        collections: ds.collections || [],
+        sops: ds.sops || [],
+        carelogs: ds.carelogs || [],
+        facility: ds.facility || defaultFacility(),
+        facilitylogs: ds.facilitylogs || [],
+      })),
     [apply],
   );
 
@@ -228,6 +268,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
           collections: mergeById(d.collections, env.bugbarn_collections),
           sops: mergeById(d.sops, env.bugbarn_sops),
           carelogs: mergeById(d.carelogs, env.bugbarn_carelogs),
+          // Facility is a single record: take the backup's if present, else keep current.
+          facility: env.bugbarn_facility || d.facility,
+          facilitylogs: mergeById(d.facilitylogs, env.bugbarn_facilitylogs),
         };
       });
     },
@@ -260,6 +303,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       bugbarn_collections: dataRef.current.collections,
       bugbarn_sops: dataRef.current.sops,
       bugbarn_carelogs: dataRef.current.carelogs,
+      bugbarn_facility: dataRef.current.facility,
+      bugbarn_facilitylogs: dataRef.current.facilitylogs,
     }),
     [],
   );
@@ -274,12 +319,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     collections: dataset.collections,
     sops: dataset.sops,
     carelogs: dataset.carelogs,
+    facility: dataset.facility,
+    facilitylogs: dataset.facilitylogs,
     loading,
     saveCollection,
     deleteCollection,
     saveSop,
     saveLog,
     deleteLog,
+    saveFacility,
+    saveFacilityLog,
+    deleteFacilityLog,
     replaceDataset,
     mergeBackup,
     clearAll,

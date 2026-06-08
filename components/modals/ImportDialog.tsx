@@ -21,7 +21,7 @@ function ImportDialog({
 
   const counts = `${(env.bugbarn_collections || []).length} species · ${(env.bugbarn_sops || []).length} SOPs · ${
     (env.bugbarn_carelogs || []).length
-  } care logs`;
+  } care logs · ${(env.bugbarn_facilitylogs || []).length} facility logs`;
 
   return (
     <ModalShell

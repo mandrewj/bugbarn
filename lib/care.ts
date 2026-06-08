@@ -4,7 +4,7 @@
 // they take the data they need so they stay unit-testable.
 // ============================================================
 
-import type { CareLog, CareTask, CollectionEntry, Sop, Frequency, Risk } from "./types";
+import type { CareLog, CareTask, CollectionEntry, Sop, Frequency, Risk, Facility, FacilityTask, FacilityLog, Range } from "./types";
 import { daysBetween, dateKey } from "./format";
 
 /** Free-text feeding frequency → day count. */
@@ -162,6 +162,77 @@ export function computeStats(collections: CollectionEntry[], logs: CareLog[]): D
     }
   });
   return { species: collections.length, individuals: totalInd, due, overdue, stale, onExhibit, exhibitOverdue };
+}
+
+// ============================================================
+// Facility monitoring — mirrors the per-species logic above, but for
+// the single barn facility (no collectionId; adds temp/humidity).
+// ============================================================
+
+export type ReadingFlag = "ok" | "low" | "high" | null;
+
+/** Where a reading sits relative to its target band (null = no value/target). */
+export function readingFlag(value: number | null, target: Range | null): ReadingFlag {
+  if (value == null || !target) return null;
+  if (value < target.min) return "low";
+  if (value > target.max) return "high";
+  return "ok";
+}
+
+/** Facility logs newest first. */
+export function facilityLogsSorted(logs: FacilityLog[]): FacilityLog[] {
+  return logs.slice().sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/** Most recent log satisfying a managerial task (taskId match, taskType fallback). */
+export function facilityLastLogOfTask(logs: FacilityLog[], task: FacilityTask): string | null {
+  const ls = facilityLogsSorted(logs).filter((l) => (l.taskId ? l.taskId === task.id : l.taskType === task.taskType));
+  return ls.length ? ls[0].date : null;
+}
+
+/** For a single managerial task: when is it next due? (mirrors taskStatus) */
+export function facilityTaskStatus(logs: FacilityLog[], task: FacilityTask): TaskStatus {
+  const iv = taskFreqDays(task.frequency);
+  const last = facilityLastLogOfTask(logs, task);
+  if (!last) return { status: "overdue", daysSince: Infinity, nextDays: -Infinity, iv, last: null };
+  const since = daysBetween(new Date(), last);
+  const nextDays = iv - since;
+  const status = nextDays < 0 ? "overdue" : nextDays === 0 ? "due" : "ok";
+  return { status, daysSince: since, nextDays, iv, last };
+}
+
+/** Newest log carrying at least one environment reading. */
+export function latestFacilityReading(logs: FacilityLog[]): FacilityLog | null {
+  return facilityLogsSorted(logs).find((l) => l.temperature != null || l.humidity != null) || null;
+}
+
+export interface FacilityRollup {
+  status: "overdue" | "due" | "ok";
+  dueCount: number;
+  overdueCount: number;
+  latest: FacilityLog | null;
+  tempFlag: ReadingFlag;
+  humidityFlag: ReadingFlag;
+}
+
+/** Dashboard/page rollup for the facility. */
+export function facilityRollup(facility: Facility, logs: FacilityLog[]): FacilityRollup {
+  let due = 0;
+  let overdue = 0;
+  for (const t of facility.tasks) {
+    const ts = facilityTaskStatus(logs, t);
+    if (ts.status === "overdue") overdue++;
+    else if (ts.status === "due") due++;
+  }
+  const latest = latestFacilityReading(logs);
+  return {
+    status: overdue > 0 ? "overdue" : due > 0 ? "due" : "ok",
+    dueCount: due,
+    overdueCount: overdue,
+    latest,
+    tempFlag: readingFlag(latest?.temperature ?? null, facility.tempTarget),
+    humidityFlag: readingFlag(latest?.humidity ?? null, facility.humidityTarget),
+  };
 }
 
 /** Group logs by local date key for the schedule grids. */
