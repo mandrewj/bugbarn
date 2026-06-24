@@ -278,8 +278,8 @@ h1,h2,h3,h4{margin:0;}
 .tbl tr:hover td{background:var(--paper2);}
 .tasktag{font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:5px;text-transform:capitalize;}
 .tt-feeding{background:#E7EFD6;color:#4a7322;}
-.tt-watering{background:#D4EBEC;color:#1f7a78;}
-.tt-cleaning{background:#DCE9F0;color:#3a6a8a;}
+.tt-watering{background:#DCE9F0;color:#3a6a8a;}
+.tt-cleaning{background:#F3DCE2;color:#9a3b56;}
 .tt-census{background:#F3E6C6;color:#946008;}
 .tt-observation{background:#EBE2D2;color:#7a6a4f;}
 .tt-life-event{background:#EAD9F0;color:#7a3a9a;}

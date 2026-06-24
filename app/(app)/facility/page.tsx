@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useData } from "@/components/providers/DataProvider";
 import { facilityTaskStatus, latestFacilityReading, readingFlag, type ReadingFlag } from "@/lib/care";
 import { fmtDate, fmtTime, relTime } from "@/lib/format";
-import { FREQUENCY_LABELS, TASK_COLORS } from "@/lib/constants";
+import { FREQUENCY_LABELS } from "@/lib/constants";
 import type { Range } from "@/lib/types";
 import { PageHeader, EmptyState, Splash } from "@/components/ui/bits";
 import { Icon } from "@/components/Icon";
@@ -124,8 +124,8 @@ export default function FacilityPage() {
             </div>
           </div>
           <div className="trendgrid">
-            <TrendChart title="Temperature (°F)" unit="°F" color={TASK_COLORS.cleaning} points={tempPoints} target={facility.tempTarget} />
-            <TrendChart title="Humidity (%)" unit="%" color={TASK_COLORS.watering} points={humPoints} target={facility.humidityTarget} />
+            <TrendChart title="Temperature (°F)" unit="°F" color="#C8860A" points={tempPoints} target={facility.tempTarget} />
+            <TrendChart title="Humidity (%)" unit="%" color="#4a86b0" points={humPoints} target={facility.humidityTarget} />
           </div>
         </>
       ) : null}

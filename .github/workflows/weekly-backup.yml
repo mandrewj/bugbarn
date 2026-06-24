@@ -1,0 +1,59 @@
+name: Weekly data backup
+
+# Pulls the live bugbarn.json from Vercel Blob once a week and commits a dated
+# snapshot into backups/ in this repo. Backups are plain JSON, restorable via
+# Settings → Import backup in the app.
+#
+# Setup (one time): add a repository secret named BLOB_DATA_URL set to the
+# public URL of bugbarn.json in your Vercel Blob store
+# (Vercel → Storage → your Blob store → bugbarn.json → copy URL). It looks like
+#   https://<store-id>.public.blob.vercel-storage.com/bugbarn.json
+# The store is public, so this URL only exposes data you're already serving.
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Mondays 08:00 UTC
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download current data
+        env:
+          BLOB_DATA_URL: ${{ secrets.BLOB_DATA_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BLOB_DATA_URL:-}" ]; then
+            echo "::error::Repository secret BLOB_DATA_URL is not set (public bugbarn.json Blob URL)."
+            exit 1
+          fi
+          mkdir -p backups
+          stamp="$(date -u +%Y-%m-%d)"
+          curl -fsSL --retry 3 -H "Cache-Control: no-cache" "$BLOB_DATA_URL" -o "backups/bugbarn-$stamp.json"
+          # Fail the run if we didn't get valid JSON, so we never commit garbage.
+          jq empty "backups/bugbarn-$stamp.json"
+          cp "backups/bugbarn-$stamp.json" backups/latest.json
+          echo "Saved backups/bugbarn-$stamp.json ($(wc -c < "backups/bugbarn-$stamp.json") bytes)"
+
+      - name: Commit backup
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backups/
+          if git diff --cached --quiet; then
+            echo "No data changes since last backup — nothing to commit."
+          else
+            git commit -m "Weekly data backup ($(date -u +%Y-%m-%d))"
+            git push
+          fi

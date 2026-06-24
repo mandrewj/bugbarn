@@ -57,8 +57,8 @@ export const PPE_OPTIONS = ["gloves", "eye protection", "long sleeves", "respira
 
 export const TASK_COLORS: Record<TaskType, string> = {
   feeding: "#5a8a32",
-  watering: "#2a9d9d",
-  cleaning: "#4a86b0",
+  watering: "#4a86b0",
+  cleaning: "#b5546e",
   census: "#C8860A",
   observation: "#8a7a5e",
   "life-event": "#8e5db0",
