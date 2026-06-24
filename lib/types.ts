@@ -2,12 +2,14 @@
 // Bug Barn — domain types (see reference/HANDOFF.md "Data Model")
 // ============================================================
 
-export type TaskType = "feeding" | "cleaning" | "census" | "observation" | "other";
+export type TaskType = "feeding" | "watering" | "cleaning" | "census" | "observation" | "life-event" | "other";
 export type Frequency = "daily" | "every-other-day" | "weekly" | "monthly";
 export type Risk = "low" | "medium" | "high";
 export type LifeStage = "egg" | "larva" | "nymph" | "pupa" | "juvenile" | "adult";
 /** USDA regulatory classification. "permitted" = held under a USDA permit. */
 export type PermitStatus = "permitted" | "unpermitted";
+/** Why a colony was retired from active management (history is kept either way). */
+export type RetireReason = "deceased" | "removed" | "released";
 
 export interface CareTask {
   id: string;
@@ -45,6 +47,12 @@ export interface CollectionEntry {
   sopId: string | null;
   exhibit: Exhibit;
   careTasks: CareTask[];
+  // Retiring keeps the full record + history but removes it from active care
+  // (excluded from dashboards, schedule, due/overdue, and the active list).
+  retired?: boolean;
+  retiredReason?: RetireReason | null;
+  retiredDate?: string | null; // ISO date the colony was retired
+  retiredNote?: string;
   createdAt: string;
   updatedAt: string;
 }

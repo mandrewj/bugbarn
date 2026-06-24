@@ -10,24 +10,31 @@ import { SpeciesRow } from "@/components/SpeciesRow";
 import { Icon } from "@/components/Icon";
 import { useEntryForm } from "@/components/modals/EntryForm";
 import { useLogForm } from "@/components/modals/LogForm";
+import { useLifeEventForm } from "@/components/modals/LifeEventForm";
 import { useFacilityLogForm } from "@/components/modals/FacilityLogForm";
 
 export default function DashboardPage() {
   const { collections, carelogs, facility, facilitylogs, loading } = useData();
   const openEntryForm = useEntryForm();
   const openLogForm = useLogForm();
+  const openLifeEventForm = useLifeEventForm();
   const openFacilityLog = useFacilityLogForm();
 
   if (loading) return <Splash />;
 
   const s = computeStats(collections, carelogs);
   const fac = facilityRollup(facility, facilitylogs);
-  const attention = collections
+  const active = collections.filter((c) => !c.retired);
+  const activeIds = new Set(active.map((c) => c.id));
+  const attention = active
     .map((c) => ({ c, st: careStatus(carelogs, c) }))
     .filter((o) => o.st.status !== "ok")
     .sort((a, b) => a.st.nextDays - b.st.nextDays)
     .slice(0, 4);
-  const recent = carelogs.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  const recent = carelogs
+    .filter((l) => activeIds.has(l.collectionId))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 8);
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const nameOf = (id: string) => collections.find((c) => c.id === id);
 
@@ -52,6 +59,16 @@ export default function DashboardPage() {
           <span className="qa-text">
             <b>Log Care Task</b>
             <small>Record feeding, cleaning, census &amp; more</small>
+          </span>
+          <Icon name="chR" className="qa-arrow" />
+        </button>
+        <button className="qaction" onClick={() => openLifeEventForm(null)}>
+          <span className="qa-ico qa-purple">
+            <Icon name="leaf" />
+          </span>
+          <span className="qa-text">
+            <b>Log Life Event</b>
+            <small>Molting, eggs, hatching, losses &amp; more</small>
           </span>
           <Icon name="chR" className="qa-arrow" />
         </button>
@@ -150,7 +167,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           {attention.length ? (
-            attention.map((o) => <SpeciesRow key={o.c.id} c={o.c} />)
+            attention.map((o) => <SpeciesRow key={o.c.id} c={o.c} onLog={openLogForm} />)
           ) : (
             <div style={{ padding: "18px 4px", color: "var(--ink2)", fontSize: 14 }}>
               🌿 All colonies are on schedule. Nicely done.
@@ -171,7 +188,8 @@ export default function DashboardPage() {
                     <span className="fdot" style={{ background: TASK_COLORS[l.taskType] }} />
                     <div>
                       <div className="ft">
-                        <b>{ACTIVITY_VERB[l.taskType]}</b> {c.commonName}
+                        <b>{l.taskType === "life-event" ? l.taskLabel || "Life event" : ACTIVITY_VERB[l.taskType]}</b>{" "}
+                        {c.commonName}
                         {l.notes ? ` — ${l.notes}` : ""}
                       </div>
                       <div className="fw">

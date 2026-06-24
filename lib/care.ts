@@ -142,8 +142,15 @@ export interface DashStats {
   exhibitOverdue: CollectionEntry[];
 }
 
-/** Dashboard rollups. */
-export function computeStats(collections: CollectionEntry[], logs: CareLog[]): DashStats {
+/** Colonies still under active care (retired ones keep their history but drop
+ * out of dashboards, schedules, and due/overdue math). */
+export function activeCollections(collections: CollectionEntry[]): CollectionEntry[] {
+  return collections.filter((c) => !c.retired);
+}
+
+/** Dashboard rollups — retired colonies are excluded. */
+export function computeStats(all: CollectionEntry[], logs: CareLog[]): DashStats {
+  const collections = activeCollections(all);
   const totalInd = collections.reduce((s, c) => s + (Number(c.colonySize) || 0), 0);
   let due = 0;
   let overdue = 0;

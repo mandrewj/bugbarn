@@ -7,7 +7,7 @@ import type { SVGProps } from "react";
 export type IconName =
   | "dash" | "bug" | "cal" | "sop" | "set" | "plus" | "search" | "back"
   | "edit" | "trash" | "print" | "dl" | "up" | "x" | "alert" | "leaf"
-  | "chL" | "chR" | "img" | "box" | "home" | "copy" | "check" | "menu";
+  | "chL" | "chR" | "img" | "box" | "home" | "copy" | "check" | "menu" | "archive";
 
 type PathSpec = { sw?: number; cap?: boolean; body: React.ReactNode };
 
@@ -36,6 +36,7 @@ const ICONS: Record<IconName, PathSpec> = {
   copy: { sw: 1.8, cap: true, body: <><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></> },
   check: { sw: 2.2, cap: true, body: <path d="M20 6 9 17l-5-5" /> },
   menu: { sw: 2, cap: true, body: <path d="M3 6h18M3 12h18M3 18h18" /> },
+  archive: { sw: 1.8, cap: true, body: <><rect x="3" y="4" width="18" height="4" rx="1" /><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4" /></> },
 };
 
 export function Icon({ name, ...rest }: { name: IconName } & SVGProps<SVGSVGElement>) {

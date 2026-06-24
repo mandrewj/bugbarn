@@ -34,7 +34,10 @@ export default function SchedulePage() {
   const map = logsByDay(carelogs);
   const todayKey = dateKey(new Date());
   const nameOf = (id: string) => collections.find((c) => c.id === id);
-  const overdue = collections.map((c) => ({ c, st: careStatus(carelogs, c) })).filter((o) => o.st.status === "overdue");
+  const overdue = collections
+    .filter((c) => !c.retired)
+    .map((c) => ({ c, st: careStatus(carelogs, c) }))
+    .filter((o) => o.st.status === "overdue");
 
   return (
     <>

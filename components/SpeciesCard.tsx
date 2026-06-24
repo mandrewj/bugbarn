@@ -14,7 +14,7 @@ export function SpeciesCard({ c }: { c: CollectionEntry }) {
   const onEx = exhibitOf(c).onExhibit;
 
   return (
-    <Link href={`/collections/${c.id}`} className="scard">
+    <Link href={`/collections/${c.id}`} className={`scard ${c.retired ? "retired" : ""}`}>
       <div className="photo">
         {c.photo ? (
           <img src={c.photo} alt="" />
@@ -26,7 +26,7 @@ export function SpeciesCard({ c }: { c: CollectionEntry }) {
         <div className="riskbadge">
           <RiskBadge risk={risk} />
         </div>
-        {onEx ? <div className="exhibitribbon">On exhibit</div> : null}
+        {c.retired ? <div className="exhibitribbon retired-ribbon">Retired</div> : onEx ? <div className="exhibitribbon">On exhibit</div> : null}
       </div>
       <div className="bd">
         <h4>{c.commonName}</h4>
@@ -36,7 +36,7 @@ export function SpeciesCard({ c }: { c: CollectionEntry }) {
           <PermitBadge status={c.permitStatus} />
           <Chip>colony · {c.colonySize || 0}</Chip>
           <Chip>{c.enclosureType || "—"}</Chip>
-          <CareStatusChip st={st} mode="card" />
+          {c.retired ? null : <CareStatusChip st={st} mode="card" />}
         </div>
         <div className="added">added {fmtDate(c.dateAdded)}</div>
       </div>

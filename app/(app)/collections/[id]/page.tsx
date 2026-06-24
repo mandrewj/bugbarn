@@ -6,12 +6,14 @@ import type { Frequency } from "@/lib/types";
 import { useData } from "@/components/providers/DataProvider";
 import { careStatus, getCareTasks, riskOf, sopForCollection, taskStatus, logsForCollection } from "@/lib/care";
 import { fmtDate, fmtTime } from "@/lib/format";
-import { SOP_SECTIONS, FREQUENCY_LABELS } from "@/lib/constants";
+import { SOP_SECTIONS, FREQUENCY_LABELS, RETIRE_REASONS } from "@/lib/constants";
 import { Splash, RiskBadge, PermitBadge } from "@/components/ui/bits";
 import { Icon } from "@/components/Icon";
 import { LocationCard } from "@/components/LocationCard";
 import { useEntryForm } from "@/components/modals/EntryForm";
 import { useLogForm } from "@/components/modals/LogForm";
+import { useLifeEventForm } from "@/components/modals/LifeEventForm";
+import { useRetireForm } from "@/components/modals/RetireForm";
 import { useSopEditor } from "@/components/modals/SopEditor";
 import { useExhibitForm } from "@/components/modals/ExhibitForm";
 import { useCareTasksEditor } from "@/components/modals/CareTasksEditor";
@@ -34,10 +36,12 @@ export default function DetailPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : (params.id as string);
   const router = useRouter();
-  const { collections, sops, carelogs, loading, deleteCollection, deleteLog } = useData();
+  const { collections, sops, carelogs, loading, deleteCollection, deleteLog, saveCollection } = useData();
 
   const openEntryForm = useEntryForm();
   const openLogForm = useLogForm();
+  const openLifeEventForm = useLifeEventForm();
+  const openRetireForm = useRetireForm();
   const openSopEditor = useSopEditor();
   const openExhibitForm = useExhibitForm();
   const openCareTasksEditor = useCareTasksEditor();
@@ -68,6 +72,24 @@ export default function DetailPage() {
         <Icon name="back" /> All species
       </button>
 
+      {entry.retired ? (
+        <div className="alert retired-alert">
+          <Icon name="archive" />
+          <div className="at">
+            <b>
+              This colony is retired
+              {entry.retiredReason
+                ? ` · ${RETIRE_REASONS.find((r) => r.value === entry.retiredReason)?.label ?? entry.retiredReason}`
+                : ""}
+              {entry.retiredDate ? ` · ${fmtDate(entry.retiredDate)}` : ""}.
+            </b>{" "}
+            <span className="names">
+              {entry.retiredNote ? entry.retiredNote + " · " : ""}History is preserved; it&apos;s hidden from active dashboards and the schedule.
+            </span>
+          </div>
+        </div>
+      ) : null}
+
       <div className="phead" style={{ marginBottom: 18 }}>
         <div>
           <p className="kicker">
@@ -86,6 +108,20 @@ export default function DetailPage() {
           <button className="btn btn-ghost btn-sm" onClick={() => openEntryForm(entry)}>
             <Icon name="edit" /> Edit
           </button>
+          {entry.retired ? (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() =>
+                saveCollection({ ...entry, retired: false, retiredReason: null, retiredDate: null, retiredNote: "" })
+              }
+            >
+              <Icon name="back" /> Restore
+            </button>
+          ) : (
+            <button className="btn btn-ghost btn-sm" onClick={() => openRetireForm(entry)}>
+              <Icon name="archive" /> Retire
+            </button>
+          )}
           <button
             className="btn btn-danger btn-sm"
             onClick={() =>
@@ -148,6 +184,13 @@ export default function DetailPage() {
             style={{ marginTop: 14, width: "100%", justifyContent: "center" }}
           >
             <Icon name="plus" /> Log Care Task
+          </button>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => openLifeEventForm(entry.id)}
+            style={{ marginTop: 10, width: "100%", justifyContent: "center" }}
+          >
+            <Icon name="leaf" /> Log Life Event
           </button>
         </div>
 
